@@ -29,7 +29,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
-            noised_images, real_noise = forward_diffusion_sample(batch, t)
+            noised_images, real_noise = forward_diffusion_sample(batch, t, device=device)
             # show_lab_image(noised_images)
             noise_pred, reconstructed_img = model(batch.to(device), t)
             # show_lab_image(reconstructed_img.detach())

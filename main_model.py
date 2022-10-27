@@ -63,7 +63,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
     ab_noised = sqrt_alphas_cumprod_t.to(device) * ab.to(device) \
     + sqrt_one_minus_alphas_cumprod_t.to(device) * noise.to(device)
 
-    noised_img = torch.cat((l, ab_noised), dim=1)
+    noised_img = torch.cat((l, ab_noised), dim=1, device=device)
     return(noised_img, noise)
 
 
