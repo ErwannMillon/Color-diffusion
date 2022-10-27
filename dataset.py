@@ -32,7 +32,7 @@ class ColorizationDataset(Dataset):
         img_lab = transforms.ToTensor()(img_lab)
         L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
-
+        return (torch.cat((L, ab), dim=0))
         return {'L': L, 'ab': ab}
     def get_rgb(self):
         img = Image.open(self.paths[0]).convert("RGB")

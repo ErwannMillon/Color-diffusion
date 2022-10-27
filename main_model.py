@@ -107,8 +107,12 @@ class MainModel(nn.Module):
             p.requires_grad = requires_grad
         
     def setup_input(self, data):
-        self.L = data['L'].to(self.device)
-        self.ab = data['ab'].to(self.device)
+        self.L = data[:, :1, ...].to(self.device)
+        self.ab = data[:, 1:, ...].to(self.device)
+        # self.ab = data['ab'].to(self.device)
+        print(f"self.L.shape = {self.L.shape}")
+        print(f"self.ab.shape = {self.ab.shape}")
+
         
     def forward(self, data, timesteps):
         self.color_noise_pred = self.unet(data.to(self.device), timesteps)

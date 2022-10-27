@@ -1,10 +1,11 @@
+from sqlite3 import register_converter
 from main_model import MainModel
 import torch
 from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from utils import log_results, update_losses, visualize
+from utils import log_results, update_losses, visualize, show_lab_image
 from main_model import forward_diffusion_sample
 import torch.nn.functional as F
 import wandb
@@ -13,8 +14,8 @@ import wandb
 BATCH_SIZE = 16
 wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
 
-dataset = ColorizationDataset(["./data/test.jpg"]);
-train_dl = DataLoader(dataset, batch_size=1)
+dataset = ColorizationDataset(["./data/test.jpg"] * 16);
+train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
 def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16, device="cpu"):
     # data = next(iter(train_dl)) # getting a batch for visualizing the model output after fixed intrvals
     model.unet.train()
@@ -26,16 +27,20 @@ def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16
             # print(f"{batch.shape=}")
             print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
-            noised_image, real_noise = forward_diffusion_sample(batch, t)
-            reconstructed_images, noise_pred = model(batch, t)
+            noised_images, real_noise = forward_diffusion_sample(batch, t)
+            show_lab_image(noised_images)
+            noise_pred, reconstructed_img = model(batch, t)
+            # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
             wandb.log({"epoch":e, "step":step, "loss":loss.item()})
             # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
-            # if step % display_every == 0:
-            #     print(f"\nEpoch {e+1}/{epochs}")
-            #     print(f"Iteration {i}/{len(train_dl)}")
-            #     log_results(loss_meter_dict) # function to print out the losses
-            #     visualize(model, batch, save=False) # function displaying the model's outputs
+            if step % display_every == 0:
+                print(f"\nEpoch {e+1}/{epochs}")
+                print(f"Iteration {step}")
+                show_lab_image(reconstructed_img.detach())
+                # log_results(loss_meter_dict) # function to print out the losses
+                # visualize(model, batch, save=False) # function displaying the model's outputs
+
 
 model = MainModel()
 train_model(model, train_dl, 100)

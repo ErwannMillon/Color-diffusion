@@ -7,6 +7,20 @@ from torch import nn
 
 import torch
 
+def split_lab(image):
+	assert isinstance(image, torch.Tensor)
+	if isinstance(image, torch.Tensor):
+		l = image[:, :1,]
+		ab = image[:, 1:,]	
+	return (l, ab)
+
+def show_lab_image(image):
+    rgb_imgs = lab_to_rgb(*split_lab(image))
+    for i in range(rgb_imgs.shape[0]):
+        plt.subplot(1, rgb_imgs.shape[0], i + 1)
+        plt.imshow(rgb_imgs[i])
+    plt.show()
+    
 def init_weights(net, init='norm', gain=0.02):
     
     def init_func(m):
