@@ -15,7 +15,7 @@ BATCH_SIZE = 16
 
 dataset = ColorizationDataset(["./data/test.jpg"] * 16);
 train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
-def train_model(model, train_dl, epochs, save_interval=500, 
+def train_model(model, train_dl, epochs, save_interval=15, 
                 display_every=200, T=300, batch_size=16, device="cpu"):
     # data = next(iter(train_dl)) # getting a batch for visualizing the model output after fixed intrvals
     model.unet.train()
@@ -39,7 +39,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
                 # print(f"\nEpoch {e+1}/{epochs}")
                 # print(f"Iteration {step}")
                 # show_lab_image(reconstructed_img.detach())
-        if epoch % save_interval == 0:
+        if e % save_interval == 0:
             torch.save(model.state_dict(), f"./saved_models/model_{e}_")
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
@@ -47,7 +47,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"using device {device}")
 model = MainModel().to(device)
-train_model(model, train_dl, 10, device=device)
+train_model(model, train_dl, 150, device=device)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
