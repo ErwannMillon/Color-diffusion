@@ -12,7 +12,7 @@ import wandb
 
 #HYPERPARAMS
 BATCH_SIZE = 16
-wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
+# wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
 
 dataset = ColorizationDataset(["./data/test.jpg"] * 16);
 train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
@@ -33,7 +33,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
             noise_pred, reconstructed_img = model(batch, t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
-            wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+            # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
             # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
             if step % display_every == 0:
                 print(f"\nEpoch {e+1}/{epochs}")
