@@ -23,14 +23,15 @@ def train_model(model, train_dl, epochs, save_interval=500,
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
             # loss_meter_dict = create_loss_meters() # function returing a dictionary of objects to 
-                                                     # log the losses of the complete network
+                                                   # log the losses of the complete network
+            
             model.setup_input(batch.to(device)) 
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t)
             # show_lab_image(noised_images)
-            noise_pred, reconstructed_img = model(batch, t)
+            noise_pred, reconstructed_img = model(batch.to(device), t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
             # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
