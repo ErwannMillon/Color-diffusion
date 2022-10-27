@@ -43,7 +43,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
                 # show_lab_image(reconstructed_img.detach())
         if e % save_interval == 0:
             print(f"epoch: {e}")
-            torch.save(model.state_dict(), f"./saved_models/model_{e}_")
+            torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             show_lab_image(reconstructed_img.detach())
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
@@ -51,6 +51,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"using device {device}")
 model = MainModel().to(device)
+# ckpt = "./saved_models/."
 train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device)
 ############
 # def get_loss(model, x_0, t):
