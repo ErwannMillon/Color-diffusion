@@ -1,4 +1,3 @@
-from turtle import forward
 from main_model import MainModel
 import torch
 from dataset import make_dataloaders
@@ -24,8 +23,8 @@ def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16
             # loss_meter_dict = create_loss_meters() # function returing a dictionary of objects to 
                                                      # log the losses of the complete network
             model.setup_input(batch) 
-            print(f"{batch.shape=}")
-    
+            # print(f"{batch.shape=}")
+            print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
             noised_image, real_noise = forward_diffusion_sample(batch, t)
             reconstructed_images, noise_pred = model(batch, t)
