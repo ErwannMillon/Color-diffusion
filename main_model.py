@@ -110,8 +110,8 @@ class MainModel(nn.Module):
         self.L = data[:, :1, ...].to(self.device)
         self.ab = data[:, 1:, ...].to(self.device)
         # self.ab = data['ab'].to(self.device)
-        print(f"self.L.shape = {self.L.shape}")
-        print(f"self.ab.shape = {self.ab.shape}")
+        # print(f"self.L.shape = {self.L.shape}")
+        # print(f"self.ab.shape = {self.ab.shape}")
 
         
     def forward(self, data, timesteps):
