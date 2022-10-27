@@ -16,9 +16,9 @@ def split_lab(image):
 
 def show_lab_image(image):
     rgb_imgs = lab_to_rgb(*split_lab(image))
-    for i in range(rgb_imgs.shape[0]):
-        plt.subplot(1, rgb_imgs.shape[0], i + 1)
-        plt.imshow(rgb_imgs[i])
+    # for i in range(rgb_imgs.shape[0]):
+    #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
+    plt.imshow(rgb_imgs[0])
     plt.show()
     
 def init_weights(net, init='norm', gain=0.02):
