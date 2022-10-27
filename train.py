@@ -24,7 +24,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
         for step, batch in tqdm(enumerate(train_dl)):
             # loss_meter_dict = create_loss_meters() # function returing a dictionary of objects to 
                                                      # log the losses of the complete network
-            model.setup_input(batch) 
+            model.setup_input(batch.to(device)) 
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
@@ -38,7 +38,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
             if step % display_every == 0:
                 print(f"\nEpoch {e+1}/{epochs}")
                 print(f"Iteration {step}")
-                # show_lab_image(reconstructed_img.detach())
+                show_lab_image(reconstructed_img.detach())
             if step % save_interval == 0:
                 torch.save(model.state_dict(), f"./saved_models/model_{e}_{step}")
                 # log_results(loss_meter_dict) # function to print out the losses
