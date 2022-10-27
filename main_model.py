@@ -46,7 +46,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
     sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
     sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - alphas_cumprod)
     posterior_variance = betas * (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
-
+    x_0 = x_0.to(device)
     if isinstance(x_0, torch.Tensor):
         l = x_0[:, :1,]
         ab = x_0[:, 1:,]
@@ -54,7 +54,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
         l = x_0["L"]
         ab = x_0["ab"]
 
-    noise = torch.randn_like(ab)
+    noise = torch.randn_like(ab, device=device)
     sqrt_alphas_cumprod_t = get_index_from_list(sqrt_alphas_cumprod, t, ab.shape)
     sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
         sqrt_one_minus_alphas_cumprod, t, ab.shape
