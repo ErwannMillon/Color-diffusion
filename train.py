@@ -34,7 +34,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             noise_pred, reconstructed_img = model(batch.to(device), t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
-            if (log)
+            if (log):
                 wandb.log({"epoch":e, "step":step, "loss":loss.item()})
             # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
             # if step % display_every == 0:
