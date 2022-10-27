@@ -47,7 +47,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"using device {device}")
-model = MainModel()
+model = MainModel().to(device)
 train_model(model, train_dl, 100, device=device)
 ############
 # def get_loss(model, x_0, t):
