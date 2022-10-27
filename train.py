@@ -16,7 +16,8 @@ wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
 
 dataset = ColorizationDataset(["./data/test.jpg"] * 16);
 train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
-def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16, device="cpu"):
+def train_model(model, train_dl, epochs, save_interval=500, 
+                display_every=200, T=300, batch_size=16, device="cpu"):
     # data = next(iter(train_dl)) # getting a batch for visualizing the model output after fixed intrvals
     model.unet.train()
     for e in range(epochs):
@@ -25,10 +26,10 @@ def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16
                                                      # log the losses of the complete network
             model.setup_input(batch) 
             # print(f"{batch.shape=}")
-            print(f"batch.shape = {batch.shape}")
+            # print(f"batch.shape = {batch.shape}")
             t = torch.randint(0, T, (batch_size,), device=device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t)
-            show_lab_image(noised_images)
+            # show_lab_image(noised_images)
             noise_pred, reconstructed_img = model(batch, t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
@@ -38,6 +39,8 @@ def train_model(model, train_dl, epochs, display_every=200, T=300, batch_size=16
                 print(f"\nEpoch {e+1}/{epochs}")
                 print(f"Iteration {step}")
                 show_lab_image(reconstructed_img.detach())
+            if step % save_interval == 0:
+                torch.save(model.state_dict(), f"./saved_models/model_{e}_{step}")
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
 
