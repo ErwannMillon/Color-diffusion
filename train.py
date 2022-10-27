@@ -44,9 +44,10 @@ def train_model(model, train_dl, epochs, save_interval=500,
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
 
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"using device {device}")
 model = MainModel()
-train_model(model, train_dl, 100)
+train_model(model, train_dl, 100, device=device)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
