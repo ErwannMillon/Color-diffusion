@@ -115,6 +115,9 @@ class MainModel(nn.Module):
 
         
     def forward(self, data, timesteps):
+        print("fwd")
+        print(data.device)
+        print(timesteps.device)
         self.color_noise_pred = self.unet(data.to(self.device), timesteps.to(self.device))
         fake_image = torch.cat([self.L, self.color_noise_pred], dim=1)
         return(self.color_noise_pred, fake_image)
