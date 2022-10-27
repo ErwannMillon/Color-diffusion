@@ -10,13 +10,14 @@ import torch.nn.functional as F
 import wandb
 
 #HYPERPARAMS
-BATCH_SIZE = 16
-# wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
+BATCH_SIZE = 2
+wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
 
-dataset = ColorizationDataset(["./data/test.jpg"] * 16);
+dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
 train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
 def train_model(model, train_dl, epochs, save_interval=15, 
-                display_every=200, T=300, batch_size=16, device="cpu"):
+                display_every=200, T=300, batch_size=16,
+                log=True, device="cpu"):
     # data = next(iter(train_dl)) # getting a batch for visualizing the model output after fixed intrvals
     model.unet.train()
     for e in range(epochs):
@@ -33,7 +34,8 @@ def train_model(model, train_dl, epochs, save_interval=15,
             noise_pred, reconstructed_img = model(batch.to(device), t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)
-            # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+            if (log)
+                wandb.log({"epoch":e, "step":step, "loss":loss.item()})
             # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
             # if step % display_every == 0:
                 # print(f"\nEpoch {e+1}/{epochs}")
@@ -48,7 +50,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"using device {device}")
 model = MainModel().to(device)
-train_model(model, train_dl, 150, device=device)
+train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
