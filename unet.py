@@ -17,6 +17,7 @@ class Block(nn.Module):
         self.bnorm1 = nn.BatchNorm2d(out_ch)
         self.bnorm2 = nn.BatchNorm2d(out_ch)
         self.relu  = nn.ReLU()
+        # self.tanh = nn.Tanh()
         
     def forward(self, x, t, ):
         # First Conv
