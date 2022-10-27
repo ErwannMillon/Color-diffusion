@@ -37,9 +37,9 @@ def train_model(model, train_dl, epochs, save_interval=500,
             # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
             # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
             if step % display_every == 0:
-                print(f"\nEpoch {e+1}/{epochs}")
-                print(f"Iteration {step}")
-                show_lab_image(reconstructed_img.detach())
+                # print(f"\nEpoch {e+1}/{epochs}")
+                # print(f"Iteration {step}")
+                # show_lab_image(reconstructed_img.detach())
             if step % save_interval == 0:
                 torch.save(model.state_dict(), f"./saved_models/model_{e}_{step}")
                 # log_results(loss_meter_dict) # function to print out the losses
