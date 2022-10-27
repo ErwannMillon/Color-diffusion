@@ -38,7 +38,7 @@ def train_model(model, train_dl, epochs, save_interval=500,
             if step % display_every == 0:
                 print(f"\nEpoch {e+1}/{epochs}")
                 print(f"Iteration {step}")
-                show_lab_image(reconstructed_img.detach())
+                # show_lab_image(reconstructed_img.detach())
             if step % save_interval == 0:
                 torch.save(model.state_dict(), f"./saved_models/model_{e}_{step}")
                 # log_results(loss_meter_dict) # function to print out the losses
