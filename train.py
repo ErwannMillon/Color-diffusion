@@ -26,7 +26,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             model.setup_input(batch.to(device)) 
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
-            real_L, real_AB = split_lab(batch[0].to(device))
+            real_L, real_AB = split_lab(batch[:1, ...].to(device))
             t = torch.randint(0, T, (batch_size,), device=device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t, device=device)
             # show_lab_image(noised_images)

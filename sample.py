@@ -67,7 +67,7 @@ def sample_plot_image(x_l, model, device, T=300):
     # # Sample noise
     img_size = x_l.shape[-1]
     print(f"device = {device}")
-    x_l = x_l.unsqueeze(0).to(device)
+    x_l = x_l.to(device)
     print(f"x_l.device = {x_l.device}")
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     print(f"x_ab.device = {x_ab.device}")
@@ -86,7 +86,6 @@ def sample_plot_image(x_l, model, device, T=300):
             # show_tensor_image(img.detach().cpu())
     plt.show()     
 
-# x = torch.randn((1, 1, 256, 256))
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MainModel().to(device)
@@ -94,5 +93,6 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(ckpt, map_location=device))
     dataset = ColorizationDataset(["./data/test.jpg"]);
     dataloader = DataLoader(dataset, batch_size=1)
+    x = torch.randn((1, 256, 256))
     x = next(iter(dataloader))
-    sample_plot_image(x, model)
+    sample_plot_image(x, model, device)
