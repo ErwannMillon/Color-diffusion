@@ -67,7 +67,7 @@ def sample_plot_image(x_l, model, device, T=300):
     # # Sample noise
     img_size = x_l.shape[-1]
     print(f"device = {device}")
-    x_l = x_l.to(device)
+    x_l = x_l.unsqueeze(0).to(device)
     print(f"x_l.device = {x_l.device}")
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     print(f"x_ab.device = {x_ab.device}")
