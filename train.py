@@ -57,7 +57,7 @@ if __name__ == "__main__":
     model = MainModel().to(device)
     # ckpt = "./saved_models/ckpt_test.pt"
     ckpt = None
-    train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device, ckpt=ckpt)
+    train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device, ckpt=ckpt, log=False)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
