@@ -48,7 +48,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            # sample_plot_image(real_L, model)
+            sample_plot_image(real_L, model)
             # show_lab_image(reconstructed_img.detach())
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs

@@ -84,7 +84,7 @@ def sample_plot_image(x, model, T=300):
     plt.show()     
 
 # x = torch.randn((1, 1, 256, 256))
-if __name__ == "main" or True:
+if __name__ == "main":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MainModel().to(device)
     ckpt = "./saved_models/ckpt_test.pt"
