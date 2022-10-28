@@ -65,6 +65,7 @@ def sample_timestep(x, t, model, T=300):
 def sample_plot_image(x_l, model, T=300):
     # Sample noise
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    img_size = x_l.shape[-1]
     print("device = {device}")
     x_l = x_l.to(device)
     print(f"x_l.device = {x_l.device}")
