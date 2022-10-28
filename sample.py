@@ -71,21 +71,20 @@ def sample_plot_image(x_l, model, device, T=300):
     print(f"x_l.device = {x_l.device}")
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     print(f"x_ab.device = {x_ab.device}")
-    # img_size = x_l.shape[-1]
-    # img = torch.cat((x_l, x_ab), dim=1)
-    # plt.figure(figsize=(15,15))
-    # plt.axis('off')
-    # num_images = 10
-    # stepsize = int(T/num_images)
+    img = torch.cat((x_l, x_ab), dim=1)
+    plt.figure(figsize=(15,15))
+    plt.axis('off')
+    num_images = 10
+    stepsize = int(T/num_images)
 
-    # for i in range(0,T)[::-1]:
-    #     t = torch.full((1,), i, device=device, dtype=torch.long)
-    #     img = sample_timestep(img, t, model)
-    #     if i % stepsize == 0:
-    #         plt.subplot(1, num_images, i//stepsize+1)
-    #         show_lab_image(img.detach().cpu())
-    #         # show_tensor_image(img.detach().cpu())
-    # plt.show()     
+    for i in range(0,T)[::-1]:
+        t = torch.full((1,), i, device=device, dtype=torch.long)
+        img = sample_timestep(img, t, model)
+        if i % stepsize == 0:
+            plt.subplot(1, num_images, i//stepsize+1)
+            show_lab_image(img.detach().cpu())
+            # show_tensor_image(img.detach().cpu())
+    plt.show()     
 
 # x = torch.randn((1, 1, 256, 256))
 if __name__ == "__main__":
