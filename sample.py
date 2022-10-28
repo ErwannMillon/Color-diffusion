@@ -43,22 +43,29 @@ def sample_timestep(x, t, model, T=300):
     sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
     
     # Call model (current image - noise prediction)
+    model.setup_input(x)
+    pred = model(x, t)[0]
+    beta_times_pred = betas_t * pred
     model_mean = sqrt_recip_alphas_t * (
-        x_ab - betas_t * model(x, t) / sqrt_one_minus_alphas_cumprod_t
+        x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
     )
+    # model_mean = sqrt_recip_alphas_t * (
+    #     x_ab - betas_t * pred  / sqrt_one_minus_alphas_cumprod_t
+    # )
     posterior_variance_t = get_index_from_list(posterior_variance, t, x.shape)
     
     #TODO Experiment with returning this always
     if t == 0:
         return cat_lab(x_l, model_mean)
     else:
-        noise = torch.randn_like(x)
+        noise = torch.randn_like(x_ab)
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
         return cat_lab(x_l, ab_t_pred)
 
-def sample_plot_image(x_l, model, T=300):
+def sample_plot_image(x, model, T=300):
     # Sample noise
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    x_l, _ = split_lab(x)
     img_size = x_l.shape[-1]
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     img = torch.cat((x_l, x_ab), dim=1)
@@ -77,4 +84,12 @@ def sample_plot_image(x_l, model, T=300):
     plt.show()     
 
 # x = torch.randn((1, 1, 256, 256))
-# sample_plot_image(x, model)
+if __name__ == "main" or True:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = MainModel().to(device)
+    ckpt = "./saved_models/ckpt_test.pt"
+    model.load_state_dict(torch.load(ckpt, map_location=device))
+    dataset = ColorizationDataset(["./data/test.jpg"]);
+    dataloader = DataLoader(dataset, batch_size=1)
+    x = next(iter(dataloader))
+    sample_plot_image(x, model)

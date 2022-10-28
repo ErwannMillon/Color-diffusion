@@ -81,6 +81,15 @@ def update_losses(model, loss_meter_dict, count):
         loss = getattr(model, loss_name)
         loss_meter.update(loss.item(), count=count)
 
+def split_lab(image):
+	assert isinstance(image, torch.Tensor)
+	if isinstance(image, torch.Tensor):
+		l = image[:, :1,]
+		ab = image[:, 1:,]	
+	return (l, ab)
+
+def cat_lab(L, ab):
+    return (torch.cat((L, ab), dim=1))
 
 def lab_to_rgb(L, ab):
     """

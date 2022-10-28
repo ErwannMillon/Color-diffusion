@@ -12,8 +12,8 @@ def linear_beta_schedule(timesteps, start=0.0001, end=0.02):
     return torch.linspace(start, end, timesteps)
 
 T = 300
-betas = linear_beta_schedule(timesteps=T)
 
+betas = linear_beta_schedule(timesteps=T)
 alphas = 1. - betas
 alphas_cumprod = torch.cumprod(alphas, axis=0)
 alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)
@@ -37,7 +37,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
     returns the noisy version of it
     """
     T = 300
-    betas = linear_beta_schedule(timesteps=T)
+    betas = linear_beta_schedule(timesteps=T, end=0.04)
 
     alphas = 1. - betas
     alphas_cumprod = torch.cumprod(alphas, axis=0)

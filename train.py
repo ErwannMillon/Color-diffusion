@@ -4,7 +4,8 @@ from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from utils import log_results, update_losses, visualize, show_lab_image
+from sample import sample_plot_image
+from utils import log_results, split_lab, update_losses, visualize, show_lab_image
 from main_model import forward_diffusion_sample
 import torch.nn.functional as F
 import wandb
@@ -17,8 +18,10 @@ dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
 train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
 def train_model(model, train_dl, epochs, save_interval=15, 
                 display_every=200, T=300, batch_size=16,
-                log=True, device="cpu"):
+                log=True, device="cpu", ckpt=None):
     # data = next(iter(train_dl)) # getting a batch for visualizing the model output after fixed intrvals
+    if ckpt:
+        model.load_state_dict(torch.load(ckpt, map_location=device))
     model.unet.train()
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
@@ -28,6 +31,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             model.setup_input(batch.to(device)) 
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
+            real_L, real_AB = split_lab(batch[0])
             t = torch.randint(0, T, (batch_size,), device=device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t, device=device)
             # show_lab_image(noised_images)
@@ -42,17 +46,18 @@ def train_model(model, train_dl, epochs, save_interval=15,
                 # print(f"Iteration {step}")
                 # show_lab_image(reconstructed_img.detach())
         if e % save_interval == 0:
-            print(f"epoch: {e}")
+            print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            show_lab_image(reconstructed_img.detach())
+            # sample_plot_image(real_L, model)
+            # show_lab_image(reconstructed_img.detach())
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"using device {device}")
 model = MainModel().to(device)
-# ckpt = "./saved_models/."
-train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device)
+ckpt = "./saved_models/ckpt_test.pt"
+train_model(model, train_dl, 150, batch_size=BATCH_SIZE, device=device, ckpt=ckpt)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
