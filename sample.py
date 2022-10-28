@@ -63,11 +63,12 @@ def sample_timestep(x, t, model, T=300):
         return cat_lab(x_l, ab_t_pred)
 
 def sample_plot_image(x_l, model, device, T=300):
-    # Sample noise
-    img_size = x_l.shape[-1]
-    print(f"device = {device}")
-    x_l = x_l.to(device)
-    print(f"x_l.device = {x_l.device}")
+    print("hadsf")
+    # # Sample noise
+    # img_size = x_l.shape[-1]
+    # print(f"device = {device}")
+    # x_l = x_l.to(device)
+    # print(f"x_l.device = {x_l.device}")
     # x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     # print(f"x_ab.device = {x_ab.device}")
     # img_size = x_l.shape[-1]
