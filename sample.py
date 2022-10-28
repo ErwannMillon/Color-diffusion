@@ -62,16 +62,15 @@ def sample_timestep(x, t, model, T=300):
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
         return cat_lab(x_l, ab_t_pred)
 
-def sample_plot_image(x_l, model, T=300):
+def sample_plot_image(x_l, model, device, T=300):
     # Sample noise
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     img_size = x_l.shape[-1]
     print(f"device = {device}")
     x_l = x_l.to(device)
     print(f"x_l.device = {x_l.device}")
-    x_ab = torch.randn((1, 2, img_size, img_size), device=device)
-    print(f"x_ab.device = {x_ab.device}")
-    img_size = x_l.shape[-1]
+    # x_ab = torch.randn((1, 2, img_size, img_size), device=device)
+    # print(f"x_ab.device = {x_ab.device}")
+    # img_size = x_l.shape[-1]
     # img = torch.cat((x_l, x_ab), dim=1)
     # plt.figure(figsize=(15,15))
     # plt.axis('off')
