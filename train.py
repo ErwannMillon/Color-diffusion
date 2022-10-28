@@ -47,7 +47,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             # show_lab_image(reconstructed_img.detach())
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
-if __name__ == "main":
+if __name__ == "__main__":
     BATCH_SIZE = 2
     wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
     dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
