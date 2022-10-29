@@ -35,18 +35,10 @@ def train_model(model, train_dl, epochs, save_interval=15,
             loss = model.optimize(noise_pred, real_noise)
             if (log):
                 wandb.log({"epoch":e, "step":step, "loss":loss.item()})
-            # update_losses(model, loss_meter_dict, count=batch['L'].size(0)) # function updating the log objects
-            # if step % display_every == 0:
-                # print(f"\nEpoch {e+1}/{epochs}")
-                # print(f"Iteration {step}")
-                # show_lab_image(reconstructed_img.detach())
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            # sample_plot_image(real_L, model, device)
-            # show_lab_image(reconstructed_img.detach())
-                # log_results(loss_meter_dict) # function to print out the losses
-                # visualize(model, batch, save=False) # function displaying the model's outputs
+            sample_plot_image(real_L, model, device)
 if __name__ == "__main__":
     BATCH_SIZE = 2
     # wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
