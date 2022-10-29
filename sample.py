@@ -82,6 +82,8 @@ def sample_plot_image(x_l, model, device, T=300):
         img = sample_timestep(img, t, model)
         if i % stepsize == 0:
             plt.subplot(1, num_images, i//stepsize+1)
+            print(torch.max(img[:, :1, ...]))
+            print(torch.max(img[:, 1:, ...]))
             show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     plt.show()     

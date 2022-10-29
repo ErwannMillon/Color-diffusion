@@ -63,9 +63,10 @@ gray_noise = torch.rand((1, 2, 256, 256)) * 2 - 1
 # plt.subplot(height, width, 4)
 # plt.imshow(rearrange(x["L"], "b c h w -> (b h) w c"))
 # plt.imshow(rearranged.numpy())
-plt.imshow(rgb_ver[0])
-plt.show()
-
+# plt.imshow(rgb_ver[0])
+# plt.show()
+print()
+print(x.max())
 
 # visualize()
 
