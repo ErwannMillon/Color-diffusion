@@ -88,16 +88,16 @@ class SimpleUnet(nn.Module):
         # Initial conv
         x = self.conv0(x)
         # Unet
-        print("tst", x.shape)
+        # print("tst", x.shape)
         residual_inputs = []
         for down in self.downs:
             x = down(x, t)
-            print("tst", x.shape)
+            # print("tst", x.shape)
             residual_inputs.append(x)
         for up in self.ups:
             residual_x = residual_inputs.pop()
             # Add residual x as additional channels
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t)
-            print("tst", x.shape)
+            # print("tst", x.shape)
         return self.output(x)
