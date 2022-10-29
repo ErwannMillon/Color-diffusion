@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 from torch import nn
 
 import torch
+def get_device():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        device = torch.device("mps")
+    return (device)
 
 def split_lab(image):
 	assert isinstance(image, torch.Tensor)
@@ -20,8 +25,10 @@ def show_lab_image(image):
     rgb_imgs = lab_to_rgb(*split_lab(image))
     # for i in range(rgb_imgs.shape[0]):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
+    # plt.figure(figsize=(10, 10))
+    # plt.ion()
     plt.imshow(rgb_imgs[0])
-    plt.show()
+    # plt.show()
     
 def init_weights(net, init='norm', gain=0.02):
     

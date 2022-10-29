@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 from tqdm.notebook import tqdm
+import matplotlib
+matplotlib.interactive(True)
 import matplotlib.pyplot as plt
 from einops import rearrange
 from skimage.color import rgb2lab, lab2rgb
@@ -17,7 +19,7 @@ from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader
 from main_model import forward_diffusion_sample
 from dataset import ColorizationDataset, make_dataloaders
-from utils import lab_to_rgb, visualize, split_lab
+from utils import lab_to_rgb, show_lab_image, visualize, split_lab
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 use_colab = None
@@ -26,6 +28,10 @@ torch.manual_seed(0)
 dataset = ColorizationDataset(["./data/test.jpg"]);
 dataloader = DataLoader(dataset, batch_size=1)
 x = next(iter(dataloader))
+show_lab_image(x)
+show_lab_image(x)
+show_lab_image(x)
+print("hi")
 # reconstruction = lab_to_rgb(x["L"], x["ab"])
 orig_rgb = dataset.get_rgb()
 orig_grey = dataset.get_grayscale()

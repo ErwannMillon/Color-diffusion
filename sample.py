@@ -74,25 +74,29 @@ def sample_plot_image(x_l, model, device, T=300):
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = int(T/num_images)
-
+    plt.figure(figsize=(10, 40))
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
         if i % stepsize == 0:
             plt.subplot(1, num_images, i//stepsize+1)
-            print(torch.max(img[:, :1, ...]))
-            print(torch.max(img[:, 1:, ...]))
-            print(torch.min(img[:, :1, ...]))
-            print(torch.min(img[:, :1, ...]))
+            # print(torch.max(img[:, :1, ...]))
+            # print(torch.max(img[:, 1:, ...]))
+            # print(torch.min(img[:, :1, ...]))
+            # print(torch.min(img[:, :1, ...]))
             img = torch.nn.functional.normalize(img)
             img = torch.clamp(img, -1, 1) 
+            
             show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     plt.show()     
 
+
 if __name__ == "__main__":
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        device = torch.device("mps")
     model = MainModel().to(device)
     ckpt = "./saved_models/ckpt_test.pt"
     model.load_state_dict(torch.load(ckpt, map_location=device))

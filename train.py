@@ -5,7 +5,7 @@ from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from sample import sample_plot_image
-from utils import log_results, split_lab, update_losses, visualize, show_lab_image
+from utils import get_device, log_results, split_lab, update_losses, visualize, show_lab_image
 from main_model import forward_diffusion_sample
 import torch.nn.functional as F
 import wandb
@@ -43,16 +43,16 @@ def train_model(model, train_dl, epochs, save_interval=15,
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            sample_plot_image(real_L, model, device)
+            # sample_plot_image(real_L, model, device)
             # show_lab_image(reconstructed_img.detach())
                 # log_results(loss_meter_dict) # function to print out the losses
                 # visualize(model, batch, save=False) # function displaying the model's outputs
 if __name__ == "__main__":
-    BATCH_SIZE = 1
+    BATCH_SIZE = 2
     # wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
     dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
     train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_device()
     print(f"using device {device}")
     model = MainModel().to(device)
     # ckpt = "./saved_models/ckpt_test.pt"

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch import optim
-from utils import init_model
+from utils import cat_lab, get_device, init_model, split_lab
 from unet import SimpleUnet
 from discriminator import PatchDiscriminator, GANLoss
 
@@ -86,11 +86,11 @@ sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - alphas_cumprod)
 posterior_variance = betas * (1. - alphas_cumprod_prev) / (1. - alphas_cumprod)
 
 class MainModel(nn.Module):
-    def __init__(self, net_G=None, lr_G=2e-4, lr_D=2e-4, 
+    def __init__(self, net_G=None, lr_G=0.001, lr_D=2e-4, 
                  beta1=0.5, beta2=0.999, lambda_L1=100.):
         super().__init__()
         
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = get_device()
         self.lambda_L1 = lambda_L1
         
         # if net_G is None:
@@ -101,7 +101,7 @@ class MainModel(nn.Module):
         self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
         self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
         self.L1criterion = nn.L1Loss()
-        self.opt_unet = optim.Adam(self.unet.parameters(), lr=lr_G, betas=(beta1, beta2))
+        self.opt_unet = optim.Adam(self.unet.parameters(), lr=lr_G)
         self.opt_D = optim.Adam(self.net_D.parameters(), lr=lr_D, betas=(beta1, beta2))
     
     def set_requires_grad(self, model, requires_grad=True):
@@ -120,6 +120,9 @@ class MainModel(nn.Module):
         # print("fwd")
         # # print(data.device)
         # print(timesteps.device)
+        x_l, x_ab = split_lab(data)
+        batch = cat_lab(x_l.detach(), x_ab)
+
         self.color_noise_pred = self.unet(data, timesteps)
         fake_image = torch.cat([self.L, self.color_noise_pred], dim=1)
         return(self.color_noise_pred, fake_image)
