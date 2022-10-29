@@ -15,6 +15,8 @@ def split_lab(image):
 	return (l, ab)
 
 def show_lab_image(image):
+    # image = torch.nn.functional.normalize(image)
+    # image = torch.clamp(image, -1, 1)
     rgb_imgs = lab_to_rgb(*split_lab(image))
     # for i in range(rgb_imgs.shape[0]):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)

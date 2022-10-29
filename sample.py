@@ -72,8 +72,6 @@ def sample_plot_image(x_l, model, device, T=300):
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
     print(f"x_ab.device = {x_ab.device}")
     img = torch.cat((x_l, x_ab), dim=1)
-    plt.figure(figsize=(15,15))
-    plt.axis('off')
     num_images = 10
     stepsize = int(T/num_images)
 
@@ -84,17 +82,22 @@ def sample_plot_image(x_l, model, device, T=300):
             plt.subplot(1, num_images, i//stepsize+1)
             print(torch.max(img[:, :1, ...]))
             print(torch.max(img[:, 1:, ...]))
+            print(torch.min(img[:, :1, ...]))
+            print(torch.min(img[:, :1, ...]))
+            img = torch.nn.functional.normalize(img)
+            img = torch.clamp(image, -1, 1) 
             show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     plt.show()     
 
 if __name__ == "__main__":
+    torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MainModel().to(device)
     ckpt = "./saved_models/ckpt_test.pt"
     model.load_state_dict(torch.load(ckpt, map_location=device))
     dataset = ColorizationDataset(["./data/test.jpg"]);
     dataloader = DataLoader(dataset, batch_size=1)
-    x = torch.randn((1, 256, 256))
+    # x = torch.randn((1, 1, 256, 256))
     x = next(iter(dataloader))
-    sample_plot_image(x, model, device)
+    sample_plot_image(x[:1, :1,...], model, device)

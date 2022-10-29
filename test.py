@@ -21,6 +21,7 @@ from utils import lab_to_rgb, visualize, split_lab
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 use_colab = None
+torch.manual_seed(0)
 
 dataset = ColorizationDataset(["./data/test.jpg"]);
 dataloader = DataLoader(dataset, batch_size=1)
@@ -36,11 +37,15 @@ orig_grey = dataset.get_grayscale()
 t = torch.Tensor([299]).type(torch.int64)
 noised_img = forward_diffusion_sample(x, t)[0]
 print(noised_img.shape)
+noised_img = torch.nn.functional.normalize(noised_img)
+print(torch.max(noised_img))
+print(torch.min(noised_img))
 noised_rgb = lab_to_rgb(*split_lab(noised_img))
 height = 1
 width = 4
 # plt.subplot(height,  width, 1)
 plt.imshow(noised_rgb[0])
+plt.show()
 # plt.subplot(height, width, 2)
 # plt.imshow(orig_rgb)
 # plt.subplot(height, width, 3)
@@ -50,7 +55,6 @@ plt.imshow(noised_rgb[0])
 
 
 
-# plt.show()
 
 rand_cat_gray = torch.Tensor(orig_grey).unsqueeze(0).unsqueeze(0)
 gray_noise = torch.rand((1, 2, 256, 256)) * 2 - 1

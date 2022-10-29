@@ -55,6 +55,8 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
         ab = x_0["ab"]
 
     noise = torch.randn_like(ab, device=device)
+    noise = torch.nn.functional.normalize(noise)
+
     sqrt_alphas_cumprod_t = get_index_from_list(sqrt_alphas_cumprod, t, ab.shape)
     sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
         sqrt_one_minus_alphas_cumprod, t, ab.shape
