@@ -85,7 +85,7 @@ def sample_plot_image(x_l, model, device, T=300):
             print(torch.min(img[:, :1, ...]))
             print(torch.min(img[:, :1, ...]))
             img = torch.nn.functional.normalize(img)
-            img = torch.clamp(image, -1, 1) 
+            img = torch.clamp(img, -1, 1) 
             show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     plt.show()     
