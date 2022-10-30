@@ -6,7 +6,6 @@ from PIL import Image
 from pathlib import Path
 from tqdm.notebook import tqdm
 import matplotlib
-matplotlib.interactive(True)
 import matplotlib.pyplot as plt
 from einops import rearrange
 from skimage.color import rgb2lab, lab2rgb
@@ -20,6 +19,7 @@ from torch.utils.data import Dataset, DataLoader
 from main_model import forward_diffusion_sample
 from dataset import ColorizationDataset, make_dataloaders
 from utils import lab_to_rgb, show_lab_image, visualize, split_lab
+import torchvision
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 use_colab = None
@@ -28,7 +28,10 @@ torch.manual_seed(0)
 dataset = ColorizationDataset(["./data/test.jpg"]);
 dataloader = DataLoader(dataset, batch_size=1)
 x = next(iter(dataloader))
-show_lab_image(x)
+images = [x, x, x]
+
+tim = torchvision.utils.make_grid(torch.cat(images), dim=0)
+show_lab_image(tim.unsqueeze(0))
 plt.show()
 # fig, ax = plt.subplots(figsize=(1, 4))
 # rgb_imgs = lab_to_rgb(*split_lab(x))
@@ -36,15 +39,16 @@ plt.show()
 # plt.imshow(rgb_imgs[0])
 # plt.imshow(rgb_imgs[0])
 # plt.show()
-exit()
-print("hi")
+# exit()
+# print("hi")
 # reconstruction = lab_to_rgb(x["L"], x["ab"])
+
+dataset = ColorizationDataset(["./data/bars.jpg"]);
 orig_rgb = dataset.get_rgb()
 orig_grey = dataset.get_grayscale()
-# plt.imshow(reconstruction[0])
-# plt.ion()
-# plt.show()
-
+plt.imshow(orig_grey, cmap="gray")
+plt.show()
+exit()
 	
 t = torch.Tensor([299]).type(torch.int64)
 noised_img = forward_diffusion_sample(x, t)[0]

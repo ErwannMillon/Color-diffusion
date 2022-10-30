@@ -1,4 +1,5 @@
 from main_model import MainModel
+import torchvision
 import torch
 from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
@@ -74,6 +75,7 @@ def sample_plot_image(x_l, model, device, T=300):
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = int(T/num_images)
+    images = []
     # plt.figure(figsize=(10, 40))
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
@@ -87,10 +89,11 @@ def sample_plot_image(x_l, model, device, T=300):
             # print(torch.min(img[:, :1, ...]))
             img = torch.nn.functional.normalize(img)
             img = torch.clamp(img, -1, 1) 
-            
-            show_lab_image(img.detach().cpu())
+            images += img 
+            # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
-    plt.tight_layout()
+    grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
+    show_lab_image(grid.unsqueeze(0))
     plt.show()     
 
 

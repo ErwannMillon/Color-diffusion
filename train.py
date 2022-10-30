@@ -28,8 +28,8 @@ def train_model(model, train_dl, epochs, save_interval=15,
             # print(f"{batch.shape=}")
             # print(f"batch.shape = {batch.shape}")
             real_L, real_AB = split_lab(batch[:1, ...].to(device))
-            # t = torch.randint(0, T, (batch_size,), device=device).long()
-            t = torch.Tensor([1]).to(device).long()
+            t = torch.randint(0, T, (batch_size,), device=device).long()
+            # t = torch.Tensor([1]).to(device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t, device=device)
             # show_lab_image(noised_images)
             noise_pred, reconstructed_img = model(batch.to(device), t)
@@ -44,12 +44,18 @@ def train_model(model, train_dl, epochs, save_interval=15,
                 sample_plot_image(real_L, model, device)
 if __name__ == "__main__":
     BATCH_SIZE = 1
+    writer = SummaryWriter('runs/colordiff')
     wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
-    dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
+    dataset = ColorizationDataset(["./data/bars.jpg"] * BATCH_SIZE);
     train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
+
     device = get_device()
     print(f"using device {device}")
     model = MainModel().to(device)
+
+    test_batch = next(iter(train_dl))
+    writer.add_graph(model, (test_batch))
+    writer.close()
     # ckpt = "./saved_models/test.pt"
     ckpt = None
     # for name, param in model.named_parameters():
@@ -57,7 +63,7 @@ if __name__ == "__main__":
         # print(param)
     train_model(model, train_dl, 150, batch_size=BATCH_SIZE, \
                 device=device, ckpt=ckpt, log=True, sample=True,\
-                save_interval=1)
+                save_interval=10)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
