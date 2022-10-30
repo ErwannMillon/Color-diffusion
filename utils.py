@@ -23,12 +23,12 @@ def show_lab_image(image):
     # image = torch.nn.functional.normalize(image)
     # image = torch.clamp(image, -1, 1)
     rgb_imgs = lab_to_rgb(*split_lab(image))
+    plt.imshow(rgb_imgs[0])
     # for i in range(rgb_imgs.shape[0]):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
     # plt.figure(figsize=(10, 10))
     # plt.ion()
-    plt.show()
-    plt.imshow(rgb_imgs[0])
+    # plt.show()
     
 def init_weights(net, init='norm', gain=0.02):
     

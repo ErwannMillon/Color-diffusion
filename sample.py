@@ -74,12 +74,13 @@ def sample_plot_image(x_l, model, device, T=300):
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = int(T/num_images)
-    plt.figure(figsize=(10, 40))
+    # plt.figure(figsize=(10, 40))
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
         if i % stepsize == 0:
             plt.subplot(1, num_images, i//stepsize+1)
+            # plt.tight_layout()
             # print(torch.max(img[:, :1, ...]))
             # print(torch.max(img[:, 1:, ...]))
             # print(torch.min(img[:, :1, ...]))
@@ -89,6 +90,7 @@ def sample_plot_image(x_l, model, device, T=300):
             
             show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
+    plt.tight_layout()
     plt.show()     
 
 

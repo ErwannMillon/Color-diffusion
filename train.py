@@ -1,4 +1,5 @@
 from main_model import MainModel
+from torch.utils.tensorboard import SummaryWriter
 import torch
 from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
@@ -43,20 +44,20 @@ def train_model(model, train_dl, epochs, save_interval=15,
                 sample_plot_image(real_L, model, device)
 if __name__ == "__main__":
     BATCH_SIZE = 1
-    # wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
+    wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
     dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
     train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
     device = get_device()
     print(f"using device {device}")
     model = MainModel().to(device)
-    ckpt = "./saved_models/test.pt"
-    # ckpt = None
+    # ckpt = "./saved_models/test.pt"
+    ckpt = None
     # for name, param in model.named_parameters():
         # print(name)
         # print(param)
     train_model(model, train_dl, 150, batch_size=BATCH_SIZE, \
-                device=device, ckpt=ckpt, log=False, sample=False,\
-                save_interval=None)
+                device=device, ckpt=ckpt, log=True, sample=True,\
+                save_interval=1)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
