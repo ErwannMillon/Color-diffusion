@@ -90,6 +90,51 @@ class SimpleUnet(nn.Module):
         
         # Initial projection
         self.conv0 = nn.Conv2d(image_channels, down_channels[0], 3, padding=1)
+
+        # Downsample
+        self.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+1], \
+                                    time_emb_dim) \
+                    for i in range(len(down_channels)-1)])
+        # Upsample
+        self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
+                                        time_emb_dim, up=True) \
+                    for i in range(len(up_channels)-1)])
+        self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
+
+    def forward(self, x, timestep):
+        # Embedd time
+        t = self.time_mlp(timestep)
+        # Initial conv
+        x = self.conv0(x)
+        # Unet
+        # print("tst", x.shape)
+        residual_inputs = []
+        for down in self.downs:
+            x = down(x, t)
+            # print("tst", x.shape)
+            residual_inputs.append(x)
+        for up in self.ups:
+            residual_x = residual_inputs.pop()
+            # Add residual x as additional channels
+            x = torch.cat((x, residual_x), dim=1)           
+            x = up(x, t)
+            # print("tst", x.shape)
+        output = self.output(x)
+        # print(f"output.shape = {output.shape}")
+        return output
+class SimpleCondUnet(SimpleUnet):
+    """
+    A simplified variant of the Unet architecture.
+    """
+    def __init__(self):
+        super().__init__()
+        image_channels = 3
+        down_channels = (64, 128, 256, 512, 1024)
+        up_channels = (1024, 512, 256, 128, 64)
+        out_dim = 2 
+        time_emb_dim = 32
+
+        # Time embedding
         self.conv0_cond = nn.Conv2d(1, down_channels[0], 3, padding=1)
 
         # Downsample
@@ -108,40 +153,21 @@ class SimpleUnet(nn.Module):
                                         time_emb_dim, up=True, scale=1) \
                     for i in range(1, len(up_channels)-1)]
         self.ups = nn.ModuleList(ups)
-        
-        # self.ups = nn.ModuleList([CondBlock(up_channels[i], up_channels[i+1], \
-        #                                 time_emb_dim, up=True) \
-        # #             for i in range(len(up_channels)-1)])
-
-        self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
     def forward(self, x, timestep):
-        # Embedd time
         x_l, _ = split_lab(x)
         t = self.time_mlp(timestep)
-        # Initial conv
         x = self.conv0(x)
         cond_emb = self.conv0_cond(x_l)
-        # Unet
-        # print("tst", x.shape)
         residual_inputs = []
         for down, cond_down in zip(self.downs, self.cond_downs):
             x = down(x, t)
             cond_emb = cond_down(cond_emb)
-            # print("tst", x.shape)
-            # print(f"res.shape {x.shape}")
             residual_inputs.append(x)
             x = torch.cat((cond_emb, x), dim=1)
-            # print(f"x.shape {x.shape}")
         for up in self.ups:
             residual_x = residual_inputs.pop()
-            # Add residual x as additional channels
-            # print(f"x.shape before cat = {x.shape}")
             x = torch.cat((x, residual_x), dim=1)           
-            # print(f"x cat.shape = {x.shape}")
-            # print(up)
             x = up(x, t)
-            # print("tst", x.shape)
         output = self.output(x)
-        # print(f"output.shape = {output.shape}")
         return output

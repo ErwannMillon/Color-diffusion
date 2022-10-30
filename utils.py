@@ -27,8 +27,8 @@ def show_lab_image(image):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
     # plt.figure(figsize=(10, 10))
     # plt.ion()
+    plt.show()
     plt.imshow(rgb_imgs[0])
-    # plt.show()
     
 def init_weights(net, init='norm', gain=0.02):
     
@@ -52,9 +52,9 @@ def init_weights(net, init='norm', gain=0.02):
     print(f"model initialized with {init} initialization")
     return net
 
-def init_model(model, device):
+def init_model(model, device, init):
     model = model.to(device)
-    model = init_weights(model)
+    model = init_weights(model, init)
     return model
 class AverageMeter:
     def __init__(self):

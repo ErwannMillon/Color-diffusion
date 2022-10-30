@@ -29,8 +29,6 @@ dataset = ColorizationDataset(["./data/test.jpg"]);
 dataloader = DataLoader(dataset, batch_size=1)
 x = next(iter(dataloader))
 show_lab_image(x)
-show_lab_image(x)
-show_lab_image(x)
 print("hi")
 # reconstruction = lab_to_rgb(x["L"], x["ab"])
 orig_rgb = dataset.get_rgb()

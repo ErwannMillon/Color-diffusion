@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch import optim
+from models import init_weights
 from utils import cat_lab, get_device, init_model, split_lab
 from unet import SimpleUnet
 from discriminator import PatchDiscriminator, GANLoss
@@ -37,7 +38,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
     returns the noisy version of it
     """
     T = 300
-    betas = linear_beta_schedule(timesteps=T, end=0.04)
+    betas = linear_beta_schedule(timesteps=T)
 
     alphas = 1. - betas
     alphas_cumprod = torch.cumprod(alphas, axis=0)
@@ -98,11 +99,12 @@ class MainModel(nn.Module):
         # else:
         #     self.net_G = net_G.to(self.device)
         self.unet = SimpleUnet()
+        self.unet = init_weights(self.unet)
         self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
-        self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
+        # self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
         self.L1criterion = nn.L1Loss()
         self.opt_unet = optim.Adam(self.unet.parameters(), lr=lr_G)
-        self.opt_D = optim.Adam(self.net_D.parameters(), lr=lr_D, betas=(beta1, beta2))
+        # self.opt_D = optim.Adam(self.net_D.parameters(), lr=lr_D, betas=(beta1, beta2))
     
     def set_requires_grad(self, model, requires_grad=True):
         for p in model.parameters():
@@ -115,8 +117,8 @@ class MainModel(nn.Module):
         # print(f"self.L.shape = {self.L.shape}")
         # print(f"self.ab.shape = {self.ab.shape}")
 
-        
     def forward(self, data, timesteps):
+        
         # print("fwd")
         # # print(data.device)
         # print(timesteps.device)
