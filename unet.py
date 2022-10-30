@@ -2,16 +2,18 @@ import torch
 from torch import nn
 import math
 
+from utils import split_lab
+
 
 class Block(nn.Module):
-    def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
+    def __init__(self, in_ch, out_ch, time_emb_dim, up=False, scale=1):
         super().__init__()
         self.time_mlp =  nn.Linear(time_emb_dim, out_ch)
         if up:
-            self.conv1 = nn.Conv2d(2*in_ch, out_ch, 3, padding=1)
+            self.conv1 = nn.Conv2d(int(2 * scale) * in_ch, out_ch, 3, padding=1)
             self.transform = nn.ConvTranspose2d(out_ch, out_ch, 4, 2, 1)
         else:
-            self.conv1 = nn.Conv2d(in_ch, out_ch, 3, padding=1)
+            self.conv1 = nn.Conv2d(scale * in_ch, out_ch, 3, padding=1)
             self.transform = nn.Conv2d(out_ch, out_ch, 4, 2, 1)
         self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1)
         self.bnorm1 = nn.BatchNorm2d(out_ch)
@@ -34,8 +36,8 @@ class Block(nn.Module):
         return self.transform(h)
 
 class CondBlock(Block):
-    def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
-        super().__init__(in_ch, out_ch, time_emb_dim, up)
+    def __init__(self, in_ch, out_ch, time_emb_dim, **kwargs):
+        super().__init__(in_ch, out_ch, time_emb_dim, **kwargs)
     def forward(self, x, t=None):
         h = self.bnorm1(self.relu(self.conv1(x)))
         # Time embedding
@@ -91,40 +93,55 @@ class SimpleUnet(nn.Module):
         self.conv0_cond = nn.Conv2d(1, down_channels[0], 3, padding=1)
 
         # Downsample
-        self.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+1], \
-                                    time_emb_dim) \
-                    for i in range(len(down_channels)-1)])
+        downs = [Block(down_channels[0], down_channels[1], time_emb_dim)]
+        downs += [CondBlock(down_channels[i], down_channels[i+1], \
+                        time_emb_dim, scale=2) \
+                    for i in range(1, len(down_channels)-1)]
+        self.downs = nn.ModuleList(downs)
         self.cond_downs = nn.ModuleList([CondBlock(down_channels[i], down_channels[i+1], \
                                     time_emb_dim) \
                     for i in range(len(down_channels)-1)])
         # Upsample
-        self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
-                                        time_emb_dim, up=True) \
-                    for i in range(len(up_channels)-1)])
-        self.ups = nn.ModuleList([CondBlock(up_channels[i], up_channels[i+1], \
-                                        time_emb_dim, up=True) \
-                    for i in range(len(up_channels)-1)])
+        ups = [Block(up_channels[0], up_channels[1], \
+                                        time_emb_dim, up=True, scale=1.5)]
+        ups += [Block(up_channels[i], up_channels[i+1], \
+                                        time_emb_dim, up=True, scale=1) \
+                    for i in range(1, len(up_channels)-1)]
+        self.ups = nn.ModuleList(ups)
+        
+        # self.ups = nn.ModuleList([CondBlock(up_channels[i], up_channels[i+1], \
+        #                                 time_emb_dim, up=True) \
+        # #             for i in range(len(up_channels)-1)])
 
         self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
     def forward(self, x, timestep):
         # Embedd time
+        x_l, _ = split_lab(x)
         t = self.time_mlp(timestep)
         # Initial conv
         x = self.conv0(x)
+        cond_emb = self.conv0_cond(x_l)
         # Unet
-        print("tst", x.shape)
+        # print("tst", x.shape)
         residual_inputs = []
-        for down in self.downs:
+        for down, cond_down in zip(self.downs, self.cond_downs):
             x = down(x, t)
-            print("tst", x.shape)
+            cond_emb = cond_down(cond_emb)
+            # print("tst", x.shape)
+            # print(f"res.shape {x.shape}")
             residual_inputs.append(x)
+            x = torch.cat((cond_emb, x), dim=1)
+            # print(f"x.shape {x.shape}")
         for up in self.ups:
             residual_x = residual_inputs.pop()
             # Add residual x as additional channels
+            # print(f"x.shape before cat = {x.shape}")
             x = torch.cat((x, residual_x), dim=1)           
+            # print(f"x cat.shape = {x.shape}")
+            # print(up)
             x = up(x, t)
-            print("tst", x.shape)
+            # print("tst", x.shape)
         output = self.output(x)
-        print(f"output.shape = {output.shape}")
+        # print(f"output.shape = {output.shape}")
         return output
