@@ -30,7 +30,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             # t = torch.randint(0, T, (batch_size,), device=device).long()
             t = torch.Tensor([1]).to(device).long()
             noised_images, real_noise = forward_diffusion_sample(batch, t, device=device)
-            show_lab_image(noised_images)
+            # show_lab_image(noised_images)
             noise_pred, reconstructed_img = model(batch.to(device), t)
             # show_lab_image(reconstructed_img.detach())
             loss = model.optimize(noise_pred, real_noise)

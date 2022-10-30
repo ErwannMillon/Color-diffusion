@@ -100,7 +100,7 @@ class MainModel(nn.Module):
         #     self.net_G = net_G.to(self.device)
         self.unet = SimpleUnet()
         self.unet = init_weights(self.unet)
-        self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
+        # self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
         # self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
         self.L1criterion = nn.L1Loss()
         self.opt_unet = optim.Adam(self.unet.parameters(), lr=lr_G)
