@@ -33,7 +33,25 @@ class Block(nn.Module):
         # Down or Upsample
         return self.transform(h)
 
+class CondBlock(Block):
+    def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
+        super().__init__(in_ch, out_ch, time_emb_dim, up)
+    def forward(self, x, t=None):
+        h = self.bnorm1(self.relu(self.conv1(x)))
+        # Time embedding
+        if t is not None:
+            time_emb = self.relu(self.time_mlp(t))
+            # Extend last 2 dimensions
+            time_emb = time_emb[(..., ) + (None, ) * 2]
+            # Add time channel
+            h = h + time_emb
+        # Second Conv
+        h = self.bnorm2(self.relu(self.conv2(h)))
+        # Down or Upsample
+        return self.transform(h)
+        
 
+    
 class SinusoidalPositionEmbeddings(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -70,13 +88,20 @@ class SimpleUnet(nn.Module):
         
         # Initial projection
         self.conv0 = nn.Conv2d(image_channels, down_channels[0], 3, padding=1)
+        self.conv0_cond = nn.Conv2d(1, down_channels[0], 3, padding=1)
 
         # Downsample
         self.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+1], \
                                     time_emb_dim) \
                     for i in range(len(down_channels)-1)])
+        self.cond_downs = nn.ModuleList([CondBlock(down_channels[i], down_channels[i+1], \
+                                    time_emb_dim) \
+                    for i in range(len(down_channels)-1)])
         # Upsample
         self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
+                                        time_emb_dim, up=True) \
+                    for i in range(len(up_channels)-1)])
+        self.ups = nn.ModuleList([CondBlock(up_channels[i], up_channels[i+1], \
                                         time_emb_dim, up=True) \
                     for i in range(len(up_channels)-1)])
 
@@ -88,16 +113,18 @@ class SimpleUnet(nn.Module):
         # Initial conv
         x = self.conv0(x)
         # Unet
-        # print("tst", x.shape)
+        print("tst", x.shape)
         residual_inputs = []
         for down in self.downs:
             x = down(x, t)
-            # print("tst", x.shape)
+            print("tst", x.shape)
             residual_inputs.append(x)
         for up in self.ups:
             residual_x = residual_inputs.pop()
             # Add residual x as additional channels
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t)
-            # print("tst", x.shape)
-        return self.output(x)
+            print("tst", x.shape)
+        output = self.output(x)
+        print(f"output.shape = {output.shape}")
+        return output

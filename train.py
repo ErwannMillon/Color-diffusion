@@ -40,7 +40,7 @@ def train_model(model, train_dl, epochs, save_interval=15,
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             sample_plot_image(real_L, model, device)
 if __name__ == "__main__":
-    BATCH_SIZE = 2
+    BATCH_SIZE = 1
     # wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
     dataset = ColorizationDataset(["./data/test.jpg"] * BATCH_SIZE);
     train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
