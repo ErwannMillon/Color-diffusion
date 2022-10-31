@@ -7,3 +7,4 @@ torch
 torchvision
 tqdm
 wandb
+torchinfo

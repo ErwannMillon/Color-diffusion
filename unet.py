@@ -18,20 +18,20 @@ class Block(nn.Module):
         self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1)
         self.bnorm1 = nn.BatchNorm2d(out_ch)
         self.bnorm2 = nn.BatchNorm2d(out_ch)
-        self.relu  = nn.ReLU()
+        self.tanh  = nn.Tanh()
         # self.tanh = nn.Tanh()
         
     def forward(self, x, t, ):
         # First Conv
-        h = self.bnorm1(self.relu(self.conv1(x)))
+        h = self.bnorm1(self.tanh(self.conv1(x)))
         # Time embedding
-        time_emb = self.relu(self.time_mlp(t))
+        time_emb = self.tanh(self.time_mlp(t))
         # Extend last 2 dimensions
         time_emb = time_emb[(..., ) + (None, ) * 2]
         # Add time channel
         h = h + time_emb
         # Second Conv
-        h = self.bnorm2(self.relu(self.conv2(h)))
+        h = self.bnorm2(self.tanh(self.conv2(h)))
         # Down or Upsample
         return self.transform(h)
 
@@ -39,16 +39,16 @@ class CondBlock(Block):
     def __init__(self, in_ch, out_ch, time_emb_dim, **kwargs):
         super().__init__(in_ch, out_ch, time_emb_dim, **kwargs)
     def forward(self, x, t=None):
-        h = self.bnorm1(self.relu(self.conv1(x)))
+        h = self.bnorm1(self.tanh(self.conv1(x)))
         # Time embedding
         if t is not None:
-            time_emb = self.relu(self.time_mlp(t))
+            time_emb = self.tanh(self.time_mlp(t))
             # Extend last 2 dimensions
             time_emb = time_emb[(..., ) + (None, ) * 2]
             # Add time channel
             h = h + time_emb
         # Second Conv
-        h = self.bnorm2(self.relu(self.conv2(h)))
+        h = self.bnorm2(self.tanh(self.conv2(h)))
         # Down or Upsample
         return self.transform(h)
         
