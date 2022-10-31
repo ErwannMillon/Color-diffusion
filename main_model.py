@@ -125,8 +125,8 @@ class MainModel(nn.Module):
         # x_l, x_ab = split_lab(data)
         # batch = cat_lab(x_l.detach(), x_ab)
         self.color_noise_pred = self.unet(data, timesteps)
-        fake_image = torch.cat([self.L, self.color_noise_pred], dim=1)
-        return(self.color_noise_pred, fake_image)
+        # fake_image = torch.cat([x_l, self.color_noise_pred], dim=1)
+        return(self.color_noise_pred, torch.tensor([1]))
         # self.pred = 
     
     def backward_D(self, fake_image):

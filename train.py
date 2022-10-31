@@ -1,4 +1,6 @@
+from cgi import test
 from main_model import MainModel
+from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
 import torch
 from dataset import make_dataloaders
@@ -42,20 +44,25 @@ def train_model(model, train_dl, epochs, save_interval=15,
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             if sample:
                 sample_plot_image(real_L, model, device)
+
+def make_graph():
+    model = MainModel().to(device)
+    t = torch.Tensor([1]).to(device).long()
+    test_batch = next(iter(train_dl))
+    summary(model, input_data=(test_batch, t), depth=5)
+    writer.add_graph(model, (test_batch, t))
+    writer.close()
+
 if __name__ == "__main__":
     BATCH_SIZE = 1
     writer = SummaryWriter('runs/colordiff')
-    wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
+    # wandb.init(project="DiffColor", config={"batch_size": BATCH_SIZE, "T": 300})
     dataset = ColorizationDataset(["./data/bars.jpg"] * BATCH_SIZE);
     train_dl = DataLoader(dataset, batch_size=BATCH_SIZE)
 
     device = get_device()
-    print(f"using device {device}")
     model = MainModel().to(device)
-
-    test_batch = next(iter(train_dl))
-    writer.add_graph(model, (test_batch))
-    writer.close()
+    print(f"using device {device}")
     # ckpt = "./saved_models/test.pt"
     ckpt = None
     # for name, param in model.named_parameters():

@@ -8,8 +8,8 @@ from torch import nn
 import torch
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        device = torch.device("mps")
+    # if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        # device = torch.device("mps")
     return (device)
 
 def split_lab(image):
