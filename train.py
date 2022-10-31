@@ -39,7 +39,8 @@ def train_model(model, train_dl, epochs, save_interval=15,
             loss = model.optimize(noise_pred, real_noise)
             if (log):
                 wandb.log({"epoch":e, "step":step, "loss":loss.item()})
-        if save_interval is not None and e % save_interval == 0:
+        # if save_interval is not None and e % save_interval == 0:
+        if e % save_interval == 0:
             print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             if sample:
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         # print(name)
         # print(param)
     train_model(model, train_dl, 150, batch_size=BATCH_SIZE, \
-                device=device, ckpt=ckpt, log=True, sample=True,\
+                device=device, ckpt=ckpt, log=False, sample=True,\
                 save_interval=10)
 ############
 # def get_loss(model, x_0, t):
