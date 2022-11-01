@@ -7,21 +7,20 @@ from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
-SIZE = 256
 
 
 class ColorizationDataset(Dataset):
-    def __init__(self, paths, split='train'):
+    def __init__(self, paths, split='train', size=64):
         if split == 'train':
             self.transforms = transforms.Compose([
-                transforms.Resize((SIZE, SIZE), Image.BICUBIC),
+                transforms.Resize((size, size), Image.BICUBIC),
                 # transforms.RandomHorizontalFlip(),  # A little data augmentation!
             ])
         elif split == 'val':
-            self.transforms = transforms.Resize((SIZE, SIZE), Image.BICUBIC)
+            self.transforms = transforms.Resize((size, size), Image.BICUBIC)
 
         self.split = split
-        self.size = SIZE
+        self.size = size
         self.paths = paths
 
     def __getitem__(self, idx):

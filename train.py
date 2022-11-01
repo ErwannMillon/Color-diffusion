@@ -70,7 +70,7 @@ if __name__ == "__main__":
         # print(name)
         # print(param)
     train_model(model, train_dl, 150, batch_size=BATCH_SIZE, \
-                device=device, ckpt=ckpt, log=False, sample=True,\
+                device=device, ckpt=ckpt, log=False, sample=False,\
                 save_interval=10)
 ############
 # def get_loss(model, x_0, t):
