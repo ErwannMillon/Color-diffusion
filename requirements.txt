@@ -4,7 +4,6 @@ matplotlib
 numpy
 Pillow
 scikit_image
-skimage
 torch
 torchinfo
 torchvision
