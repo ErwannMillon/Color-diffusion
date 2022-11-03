@@ -90,8 +90,6 @@ def sample_plot_image(x_l, model, device, T=300):
             # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
-    images = wandb.Image(grid, caption=f"x_0 to x_300 in steps of {stepsize}")
-    wandb.log({"examples": images})
     show_lab_image(grid.unsqueeze(0))
     plt.show()     
 
