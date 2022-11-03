@@ -39,9 +39,9 @@ def train_model(model, train_dl, epochs, save_interval=15,
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            for name, weight in model.named_parameters():
-                writer.add_histogram(name,weight, e)
-                writer.add_histogram(f'{name}.grad',weight.grad, e)
+            # for name, weight in model.named_parameters():
+            #     writer.add_histogram(name,weight, e)
+            #     writer.add_histogram(f'{name}.grad',weight.grad, e)
             # add_to_tb(noise_pred, real_noise, e)
             if sample:
                 sample_plot_image(real_L, model, device)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     ic.disable()
 
     train_model(model, train_dl, 150, batch_size=BATCH_SIZE, \
-                device=device, ckpt=ckpt, log=False, sample=False,\
+                device=device, ckpt=ckpt, log=True, sample=True,\
                 save_interval=10, writer=writer)
 ############
 # def get_loss(model, x_0, t):

@@ -152,7 +152,7 @@ class SimpleUnet(nn.Module):
             # print("tst", x.shape)
         output = self.output(x)
         ic()
-        print_distrib(x, "output")
+        # print_distrib(x, "output")
         # print(f"output.shape = {output.shape}")
         return output
 class SimpleCondUnet(SimpleUnet):
