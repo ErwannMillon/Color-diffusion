@@ -1,11 +1,15 @@
 import time
+from icecream import ic
 
 import numpy as np
 from skimage.color import rgb2lab, lab2rgb
 import matplotlib.pyplot as plt
 from torch import nn
+import torch.nn.functional as F
 
 import torch
+
+from main_model import forward_diffusion_sample
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -69,6 +73,11 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
 
+def get_loss(model, x_0, t, device="cuda"):
+    x_noisy, noise = forward_diffusion_sample(x_0, t, device)
+    noise_pred = model(x_noisy, t)
+    return torch.nn.functional.l1_loss(noise, noise_pred)
+
 def create_loss_meters():
     loss_D_fake = AverageMeter()
     loss_D_real = AverageMeter()
@@ -115,6 +124,17 @@ def lab_to_rgb(L, ab):
     return np.stack(rgb_imgs, axis=0)
 
 
+def print_distrib(x, str=None):
+    assert isinstance(x, torch.Tensor)
+    if str is not None:
+        print(str)
+    ic(x.max())
+    ic(x.min())
+    ic(x.mean())
+    ic(x.std())
+    print()
+
+        
 def visualize(model, data, save=True):
     model.net_G.eval()
     with torch.no_grad():

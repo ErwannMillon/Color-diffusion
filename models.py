@@ -84,7 +84,7 @@ class PatchDiscriminator(nn.Module):
         return self.model(x)
 
 
-def init_weights(net, init='norm', gain=0.02):
+def init_weights(net, init='norm', gain=0.02, leakyslope=0.02):
     def init_func(m):
         classname = m.__class__.__name__
         if hasattr(m, 'weight') and 'Conv' in classname:
@@ -93,7 +93,7 @@ def init_weights(net, init='norm', gain=0.02):
             elif init == 'xavier':
                 nn.init.xavier_normal_(m.weight.data, gain=gain)
             elif init == 'kaiming':
-                nn.init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
+                nn.init.kaiming_normal_(m.weight.data, a=leakyslope, mode='fan_in')
 
             if hasattr(m, 'bias') and m.bias is not None:
                 nn.init.constant_(m.bias.data, 0.0)

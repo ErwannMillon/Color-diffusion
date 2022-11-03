@@ -85,7 +85,7 @@ def sample_plot_image(x_l, model, device, T=300):
             # print(torch.min(img[:, :1, ...]))
             # print(torch.min(img[:, :1, ...]))
             img = torch.nn.functional.normalize(img)
-            img = torch.clamp(img, -1, 1) 
+            # img = torch.clamp(img, -1, 1) 
             images += img.unsqueeze(0)
             # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
@@ -100,10 +100,11 @@ if __name__ == "__main__":
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
         device = torch.device("mps")
     model = MainModel().to(device)
-    ckpt = "./saved_models/ckpt_test.pt"
+    ckpt = "./saved_models/he_leaky_64.pt"
     model.load_state_dict(torch.load(ckpt, map_location=device))
-    dataset = ColorizationDataset(["./data/test.jpg"]);
+    dataset = ColorizationDataset(["./data/bars.jpg"]);
     dataloader = DataLoader(dataset, batch_size=1)
     # x = torch.randn((1, 1, 256, 256))
     x = next(iter(dataloader))
+    model.eval()
     sample_plot_image(x[:1, :1,...], model, device)

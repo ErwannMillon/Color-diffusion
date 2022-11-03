@@ -1,8 +1,9 @@
 import torch
 from torch import nn
 import math
+from icecream import ic
 
-from utils import split_lab
+from utils import print_distrib, split_lab
 
 
 class Block(nn.Module):
@@ -18,20 +19,42 @@ class Block(nn.Module):
         self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1)
         self.bnorm1 = nn.BatchNorm2d(out_ch)
         self.bnorm2 = nn.BatchNorm2d(out_ch)
-        self.tanh  = nn.Tanh()
+        self.relu  = nn.LeakyReLU(0.02)
         # self.tanh = nn.Tanh()
         
     def forward(self, x, t, ):
         # First Conv
-        h = self.bnorm1(self.tanh(self.conv1(x)))
+        # ic()
+        # print_distrib(x)
+        h = self.conv1(x)
+        # ic()
+        # print_distrib(h)
+        h = self.relu(h)
+        # ic()
+        # print_distrib(h)
+        h = self.bnorm1(h)
+        # ic()
+        # print_distrib(h)
+        # h = self.bnorm1(self.tanh(self.conv1(x)))
         # Time embedding
-        time_emb = self.tanh(self.time_mlp(t))
+        time_emb = self.relu(self.time_mlp(t))
         # Extend last 2 dimensions
         time_emb = time_emb[(..., ) + (None, ) * 2]
         # Add time channel
         h = h + time_emb
+        # ic()
+        # print_distrib(h)
         # Second Conv
-        h = self.bnorm2(self.tanh(self.conv2(h)))
+        h = self.conv2(h)
+        # ic()
+        # print_distrib(h)
+        h = self.relu(h)
+        # ic()
+        # print_distrib(h)
+        h = self.bnorm2(h)
+        # ic()
+        # print_distrib(h)
+        # h = self.bnorm2(self.tanh(self.conv2(h)))
         # Down or Upsample
         return self.transform(h)
 
@@ -39,16 +62,16 @@ class CondBlock(Block):
     def __init__(self, in_ch, out_ch, time_emb_dim, **kwargs):
         super().__init__(in_ch, out_ch, time_emb_dim, **kwargs)
     def forward(self, x, t=None):
-        h = self.bnorm1(self.tanh(self.conv1(x)))
+        h = self.bnorm1(self.relu(self.conv1(x)))
         # Time embedding
         if t is not None:
-            time_emb = self.tanh(self.time_mlp(t))
+            time_emb = self.relu(self.time_mlp(t))
             # Extend last 2 dimensions
             time_emb = time_emb[(..., ) + (None, ) * 2]
             # Add time channel
             h = h + time_emb
         # Second Conv
-        h = self.bnorm2(self.tanh(self.conv2(h)))
+        h = self.bnorm2(self.relu(self.conv2(h)))
         # Down or Upsample
         return self.transform(h)
         
@@ -80,7 +103,7 @@ class SimpleUnet(nn.Module):
         # down_channels = down_channels[:3]
         up_channels = (1024, 512, 256, 128, 64)
         # up_channels = up_channels[2:]
-        out_dim = 2 
+        out_dim = 2
         time_emb_dim = 32
 
         # Time embedding
@@ -110,18 +133,26 @@ class SimpleUnet(nn.Module):
         x = self.conv0(x)
         # Unet
         # print("tst", x.shape)
+        # ic()
+        # print_distrib(x)
         residual_inputs = []
         for down in self.downs:
             x = down(x, t)
             # print("tst", x.shape)
+            # ic()
+            # print_distrib(x)
             residual_inputs.append(x)
         for up in self.ups:
             residual_x = residual_inputs.pop()
             # Add residual x as additional channels
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t)
+            # ic()
+            # print_distrib(x)
             # print("tst", x.shape)
         output = self.output(x)
+        ic()
+        print_distrib(x, "output")
         # print(f"output.shape = {output.shape}")
         return output
 class SimpleCondUnet(SimpleUnet):
@@ -133,7 +164,7 @@ class SimpleCondUnet(SimpleUnet):
         image_channels = 3
         down_channels = (64, 128, 256, 512, 1024)
         up_channels = (1024, 512, 256, 128, 64)
-        out_dim = 2 
+        out_dim = 3
         time_emb_dim = 32
 
         # Time embedding

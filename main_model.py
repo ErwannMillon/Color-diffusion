@@ -2,8 +2,8 @@ import torch
 from torch import nn
 from torch import optim
 from models import init_weights
-from utils import cat_lab, get_device, init_model, split_lab
-from unet import SimpleUnet
+# from utils import cat_lab, get_device, init_model, split_lab
+# from unet import SimpleUnet
 from discriminator import PatchDiscriminator, GANLoss
 
 
@@ -56,7 +56,7 @@ def forward_diffusion_sample(x_0, t, device="cpu"):
         ab = x_0["ab"]
 
     noise = torch.randn_like(ab, device=device)
-    noise = torch.nn.functional.normalize(noise)
+    # noise = torch.nn.functional.normalize(noise)
 
     sqrt_alphas_cumprod_t = get_index_from_list(sqrt_alphas_cumprod, t, ab.shape)
     sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
@@ -99,7 +99,7 @@ class MainModel(nn.Module):
         # else:
         #     self.net_G = net_G.to(self.device)
         self.unet = SimpleUnet()
-        self.unet = init_weights(self.unet, init="xavier")
+        self.unet = init_weights(self.unet, init="kaiming", leakyslope=0.5)
         # self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
         # self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
         self.L1criterion = nn.L1Loss()
