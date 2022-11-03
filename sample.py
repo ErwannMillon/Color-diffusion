@@ -44,8 +44,8 @@ def sample_timestep(x, t, model, T=300):
     sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
     
     # Call model (current image - noise prediction)
-    model.setup_input(x)
-    pred = model(x, t)[0]
+    # model.setup_input(x)
+    pred = model(x, t)
     beta_times_pred = betas_t * pred
     model_mean = sqrt_recip_alphas_t * (
         x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
