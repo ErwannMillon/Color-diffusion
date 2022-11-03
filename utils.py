@@ -1,4 +1,5 @@
 import time
+import wandb
 from icecream import ic
 
 import numpy as np
@@ -23,10 +24,12 @@ def split_lab(image):
 		ab = image[:, 1:,]	
 	return (l, ab)
 
-def show_lab_image(image):
+def show_lab_image(image, stepsize=10):
     # image = torch.nn.functional.normalize(image)
     # image = torch.clamp(image, -1, 1)
     rgb_imgs = lab_to_rgb(*split_lab(image))
+    images = wandb.Image(rgb_imgs, caption=f"x_0 to x_300 in steps of {stepsize}")
+    wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
     # for i in range(rgb_imgs.shape[0]):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
