@@ -10,7 +10,9 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class ColorizationDataset(Dataset):
-    def __init__(self, paths, split='train', size=64):
+    def __init__(self, paths, split='train', size=64, config=None):
+        if config:
+            size = config["img_size"]
         if split == 'train':
             self.transforms = transforms.Compose([
                 transforms.Resize((size, size), Image.BICUBIC),
