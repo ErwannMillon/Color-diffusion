@@ -16,28 +16,34 @@ import wandb
 from unet import SimpleCondUnet, SimpleUnet
 
 #HYPERPARAMS
+def optimize_diff(optim, model, batch, device,
+                    config, step, e, log=True):
+    real_L, real_AB = split_lab(batch[:1, ...].to(device))
+    t = torch.randint(0, config["T"], (config["batch_size"],), device=device).long()
+    # t = torch.Tensor([1]).to(device).long()
+    # show_lab_image(noised_images)
+    # show_lab_image(reconstructed_img.detach())
+    optim.zero_grad()
+    loss = get_loss(model, batch, t, device)
+    loss.backward()
+    optim.step()
+    if (log):
+        wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+
 def train_model(model, train_dl, epochs, save_interval=15, 
                 display_every=200, T=300, batch_size=16,
                 log=True, device="cpu", ckpt=None, sample=True, writer=None):
     if ckpt:
         model.load_state_dict(torch.load(ckpt, map_location=device))
     model.train()
-    optim = torch.optim.Adam(model.parameters(), lr=config["lr_unet"])
+    optim_diff = torch.optim.Adam(model.parameters(), lr=config["lr_unet"])
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
             real_L, real_AB = split_lab(batch[:1, ...].to(device))
-            t = torch.randint(0, T, (batch_size,), device=device).long()
-            # t = torch.Tensor([1]).to(device).long()
-            # show_lab_image(noised_images)
-            # show_lab_image(reconstructed_img.detach())
-            optim.zero_grad()
-            loss = get_loss(model, batch, t, device)
-            loss.backward()
-            optim.step()
-            if (log):
-                wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+            diff_loss = optimize_diff(optim_diff, model, batch, 
+                                        device, config, step, e)
         if e % save_interval == 0:
-            print(f"epoch: {e}, loss {loss.item()}")
+            # print(f"epoch: {e}, loss {loss.item()}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             # for name, weight in model.named_parameters():
             #     writer.add_histogram(name,weight, e)
@@ -58,13 +64,13 @@ if __name__ == "__main__":
     dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config);
     train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     device = get_device()
-    model = SimpleUnet().to(device)
+    diff_gen = SimpleUnet().to(device)
     print(f"using device {device}")
     # ckpt = "./saved_models/he_leaky_64.pt"
     ckpt = None
     ic.disable()
 
-    train_model(model, train_dl, 150, batch_size=config["batch_size"], \
+    train_model(diff_gen, train_dl, 150, batch_size=config["batch_size"], \
                 device=device, ckpt=ckpt, log=True, sample=True,\
                 save_interval=10, writer=writer, config=config)
 ############
