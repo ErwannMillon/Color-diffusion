@@ -29,6 +29,7 @@ def optimize_diff(optim, model, batch, device,
     optim.step()
     if (log):
         wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+    return loss;
 
 def train_model(model, train_dl, epochs, config, 
                 save_interval=15, display_every=200, 
@@ -49,7 +50,7 @@ def train_model(model, train_dl, epochs, config,
                 )
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
-            # torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
+            torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             # for name, weight in model.named_parameters():
             #     writer.add_histogram(name,weight, e)
             #     writer.add_histogram(f'{name}.grad',weight.grad, e)
