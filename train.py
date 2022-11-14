@@ -71,9 +71,9 @@ config = dict (
 if __name__ == "__main__":
     writer = SummaryWriter('runs/colordiff')
     wandb.init(project="DiffColor", config=config)
+    # dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
+    # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     train_dl, val_dl = make_dataloaders("./fairface", config)
-    dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
-    train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     device = get_device()
     diff_gen = SimpleUnet().to(device)
     print(f"using device {device}")

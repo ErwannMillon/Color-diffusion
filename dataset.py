@@ -1,3 +1,4 @@
+import glob
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2lab, lab2rgb
@@ -16,7 +17,7 @@ class ColorizationDataset(Dataset):
         if split == 'train':
             self.transforms = transforms.Compose([
                 transforms.Resize((size, size), Image.BICUBIC),
-                # transforms.RandomHorizontalFlip(),  # A little data augmentation!
+                transforms.RandomHorizontalFlip(),  # A little data augmentation!
             ])
         elif split == 'val':
             self.transforms = transforms.Resize((size, size), Image.BICUBIC)
@@ -48,9 +49,13 @@ class ColorizationDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
-
-def make_dataloaders(batch_size=16, n_workers=4, pin_memory=True, **kwargs):  # A handy function to make our dataloaders
-    dataset = ColorizationDataset(**kwargs)
-    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=n_workers,
-                            pin_memory=pin_memory)
-    return dataloader
+def make_dataloaders(path, config):
+    train_paths = glob.glob(path + "/train/*.jpg")
+    train_dataset = ColorizationDataset(train_paths, split="train", size=config["img_size"])
+    train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
+                            num_workers=0, pin_memory=config["pin_memory"])
+    val_paths = glob.glob(path + "/val/*.jpg")
+    val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"])
+    val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
+                            num_workers=0, pin_memory=config["pin_memory"])
+    return train_dl, val_dl
