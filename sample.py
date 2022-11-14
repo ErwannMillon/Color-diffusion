@@ -64,6 +64,7 @@ def sample_timestep(x, t, model, T=300):
         return cat_lab(x_l, ab_t_pred)
 
 def sample_plot_image(x_l, model, device, T=300):
+    model.eval()
     # print("hadsf")
     # # Sample noise
     img_size = x_l.shape[-1]

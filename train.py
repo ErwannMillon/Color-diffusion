@@ -15,6 +15,7 @@ from main_model import forward_diffusion_sample
 import torch.nn.functional as F
 import wandb
 from unet import SimpleCondUnet, SimpleUnet
+from validation import get_val_loss
 
 #HYPERPARAMS
 def optimize_diff(optim, model, batch, device,
@@ -50,9 +51,16 @@ def train_model(model, train_dl, val_dl, epochs, config,
             losses = dict(
                 diff_loss = diff_loss.item(),
                 )
-        if step % display_every == 0:
-            if sample:
-                sample_plot_image(val_dl, model, device)
+            if step % display_every == 0:
+                if sample:
+                    model.eval()
+                    sample_plot_image(val_dl, model, device)
+                    model.train()
+                val_loss = get_val_loss(model, val_dl, device, config)
+                losses["val_loss"] = val_loss
+                if log:
+                    wandb.log({"val_loss": val_loss})
+                print(f"epoch: {e}, loss {losses}")
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
