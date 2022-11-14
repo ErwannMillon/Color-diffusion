@@ -97,6 +97,15 @@ def create_loss_meters():
             'loss_G_L1': loss_G_L1,
             'loss_G': loss_G}
 
+def right_pad_dims_to(x: torch.tensor, t: torch.tensor) -> torch.tensor:
+    """
+    Pads `t` with empty dimensions to the number of dimensions `x` has. If `t` does not have fewer dimensions than `x`
+        it is returned without change.
+    """
+    padding_dims = x.ndim - t.ndim
+    if padding_dims <= 0:
+        return t
+    return t.view(*t.shape, *((1,) * padding_dims))
 
 def update_losses(model, loss_meter_dict, count):
     for loss_name, loss_meter in loss_meter_dict.items():

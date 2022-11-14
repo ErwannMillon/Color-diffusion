@@ -5,11 +5,12 @@ from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from utils import log_results, split_lab, update_losses, visualize, show_lab_image, cat_lab
+from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
 from main_model import forward_diffusion_sample, linear_beta_schedule
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import wandb
+from einops import rearrange
 
 def get_index_from_list(vals, t, x_shape):
     """ 
@@ -63,14 +64,28 @@ def sample_timestep(x, t, model, T=300):
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
         return cat_lab(x_l, ab_t_pred)
 
+def dynamic_threshold(img, percentile=0.8):
+    s = torch.quantile(
+        rearrange(img, 'b ... -> b (...)').abs(),
+        percentile,
+        dim=-1
+    )
+
+    # If threshold is less than 1, simply clamp values to [-1., 1.]
+    s.clamp_(min=1.)
+    s = right_pad_dims_to(img, s)
+    # Clamp to +/- s and divide by s to bring values back to range [-1., 1.]
+    img = img.clamp(-s, s) / s
+    return img
+
 def sample_plot_image(x_l, model, device, T=300):
     # print("hadsf")
     # # Sample noise
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
-    # print(f"x_l.device = {x_l.device}")
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
+    # print(f"x_l.device = {x_l.device}")
     # print(f"x_ab.device = {x_ab.device}")
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
@@ -79,12 +94,14 @@ def sample_plot_image(x_l, model, device, T=300):
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
+        img = dynamic_threshold(img)
         if i % stepsize == 0:
             # print(torch.max(img[:, :1, ...]))
             # print(torch.max(img[:, 1:, ...]))
             # print(torch.min(img[:, :1, ...]))
             # print(torch.min(img[:, :1, ...]))
-            img = torch.nn.functional.normalize(img)
+            # img = torch.nn.functional.normalize(img)
+            # img = dynamic_threshold(img)
             # img = torch.clamp(img, -1, 1) 
             images += img.unsqueeze(0)
             # show_lab_image(img.detach().cpu())
