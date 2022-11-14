@@ -47,6 +47,7 @@ def sample_timestep(x, t, model, T=300):
     # Call model (current image - noise prediction)
     # model.setup_input(x)
     pred = model(x, t)
+    pred = dynamic_threshold(pred)
     beta_times_pred = betas_t * pred
     model_mean = sqrt_recip_alphas_t * (
         x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
@@ -94,7 +95,7 @@ def sample_plot_image(x_l, model, device, T=300):
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
-        img = dynamic_threshold(img)
+        # img = dynamic_threshold(img)
         if i % stepsize == 0:
             # print(torch.max(img[:, :1, ...]))
             # print(torch.max(img[:, 1:, ...]))
