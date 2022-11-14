@@ -50,6 +50,9 @@ def train_model(model, train_dl, val_dl, epochs, config,
             losses = dict(
                 diff_loss = diff_loss.item(),
                 )
+        if step % display_every == 0:
+            if sample:
+                sample_plot_image(val_dl, model, device)
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
@@ -57,8 +60,6 @@ def train_model(model, train_dl, val_dl, epochs, config,
             #     writer.add_histogram(name,weight, e)
             #     writer.add_histogram(f'{name}.grad',weight.grad, e)
             # add_to_tb(noise_pred, real_noise, e)
-            if sample:
-                sample_plot_image(val_dl, model, device)
 
 config = dict (
     batch_size = 1,
