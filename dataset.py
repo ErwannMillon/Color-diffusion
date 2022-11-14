@@ -49,13 +49,13 @@ class ColorizationDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
-def make_dataloaders(path, config):
+def make_dataloaders(path, config, num_workers=0):
     train_paths = glob.glob(path + "/train/*.jpg")
     train_dataset = ColorizationDataset(train_paths, split="train", size=config["img_size"])
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
-                            num_workers=0, pin_memory=config["pin_memory"])
+                            num_workers=num_workers, pin_memory=config["pin_memory"])
     val_paths = glob.glob(path + "/val/*.jpg")
     val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"])
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
-                            num_workers=0, pin_memory=config["pin_memory"])
+                            num_workers=num_workers, pin_memory=config["pin_memory"])
     return train_dl, val_dl
