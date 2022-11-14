@@ -43,7 +43,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
             real_L, real_AB = split_lab(batch[:1, ...].to(device))
-            print(step)
+            # print(step)
             diff_loss = optimize_diff(optim_diff, model, batch, 
                                         device, config, step, e)
 
