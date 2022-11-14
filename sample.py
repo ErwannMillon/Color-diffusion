@@ -47,7 +47,6 @@ def sample_timestep(x, t, model, T=300):
     # Call model (current image - noise prediction)
     # model.setup_input(x)
     pred = model(x, t)
-    pred = dynamic_threshold(pred)
     beta_times_pred = betas_t * pred
     model_mean = sqrt_recip_alphas_t * (
         x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
@@ -59,10 +58,12 @@ def sample_timestep(x, t, model, T=300):
     
     #TODO Experiment with returning this always
     if t == 0:
+        model_mean = dynamic_threshold(model_mean)
         return cat_lab(x_l, model_mean)
     else:
         noise = torch.randn_like(x_ab)
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
+        ab_t_pred = dynamic_threshold(ab_t_pred)
         return cat_lab(x_l, ab_t_pred)
 
 def dynamic_threshold(img, percentile=0.8):
