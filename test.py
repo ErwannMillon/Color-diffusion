@@ -1,35 +1,39 @@
-import os
 import glob
+import os
 import time
-import numpy as np
-from PIL import Image
 from pathlib import Path
-from tqdm.notebook import tqdm
+
 import matplotlib
 import matplotlib.pyplot as plt
-from einops import rearrange
-from skimage.color import rgb2lab, lab2rgb
-
-
+import numpy as np
 import torch
+import torchvision
+from einops import rearrange
+from PIL import Image
+from skimage.color import lab2rgb, rgb2lab
 from torch import nn, optim
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.utils import make_grid
-from torch.utils.data import Dataset, DataLoader
-from main_model import forward_diffusion_sample
-from dataset import ColorizationDataset, make_dataloaders
-from utils import lab_to_rgb, show_lab_image, visualize, split_lab
-import torchvision
+from tqdm.notebook import tqdm
 
+from dataset import ColorizationDataset, make_dataloaders
+from main_model import forward_diffusion_sample
+from utils import lab_to_rgb, show_lab_image, split_lab, visualize
+from train import config
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 use_colab = None
 torch.manual_seed(0)
 
-dataset = ColorizationDataset(["./data/test.jpg"]);
-dataloader = DataLoader(dataset, batch_size=1)
-x = next(iter(dataloader))
-images = [x, x, x]
+# dataset = ColorizationDataset(["./data/test.jpg"]);
+# dataloader = DataLoader(dataset, batch_size=1)
 
+train_dl, val_dl = make_dataloaders("./fairface", config)
+x = next(iter(train_dl))
+show_lab_image(x, log=False)
+plt.show()
+print()
+exit()
 tim = torchvision.utils.make_grid(torch.cat(images), dim=0)
 show_lab_image(tim.unsqueeze(0))
 plt.show()
