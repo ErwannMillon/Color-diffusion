@@ -63,10 +63,13 @@ def sample_timestep(x, t, model, T=300):
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
         return cat_lab(x_l, ab_t_pred)
 
-def sample_plot_image(x_l, model, device, T=300):
+# def sample_plot_image(x_l, model, device, T=300):
+def sample_plot_image(val_dl, model, device, T=300):
     model.eval()
     # print("hadsf")
     # # Sample noise
+    x = next(iter(val_dl)) 
+    x_l, _ = split_lab(x)
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
