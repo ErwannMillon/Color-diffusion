@@ -82,15 +82,17 @@ def dynamic_threshold(img, percentile=0.8):
     img = img.clamp(-s, s) / s
     return img
 
-def sample_plot_image(x_l, model, device, T=300):
+def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     # print("hadsf")
     # # Sample noise
+    model.eval()
+    if x_l is None:
+        x = next(iter(val_dl))[:1,]
+        x_l, _ = split_lab(x) 
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
-    x_ab = torch.randn((1, 2, img_size, img_size), device=device)
-    # print(f"x_l.device = {x_l.device}")
-    # print(f"x_ab.device = {x_ab.device}")
+    x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size), device=device)
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = int(T/num_images)
@@ -100,18 +102,11 @@ def sample_plot_image(x_l, model, device, T=300):
         img = sample_timestep(img, t, model)
         # img = dynamic_threshold(img)
         if i % stepsize == 0:
-            # print(torch.max(img[:, :1, ...]))
-            # print(torch.max(img[:, 1:, ...]))
-            # print(torch.min(img[:, :1, ...]))
-            # print(torch.min(img[:, :1, ...]))
-            # img = torch.nn.functional.normalize(img)
-            # img = dynamic_threshold(img)
-            # img = torch.clamp(img, -1, 1) 
             images += img.unsqueeze(0)
             # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
-    show_lab_image(grid.unsqueeze(0))
+    show_lab_image(grid.unsqueeze(0), log=log)
     plt.show()     
 
 
