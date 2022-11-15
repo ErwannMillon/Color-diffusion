@@ -29,8 +29,8 @@ def show_lab_image(image, stepsize=10, log=True):
     # image = torch.clamp(image, -1, 1)
     plt.figure(figsize=(20, 9))
     rgb_imgs = lab_to_rgb(*split_lab(image))
-    images = wandb.Image(rgb_imgs, caption=f"x_0 to x_300 in steps of {stepsize}")
     if log:
+        images = wandb.Image(rgb_imgs, caption=f"x_0 to x_300 in steps of {stepsize}")
         wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
     # for i in range(rgb_imgs.shape[0]):

@@ -2,7 +2,6 @@ import glob
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2lab, lab2rgb
-
 import torch
 from torch import nn, optim
 from torchvision import transforms

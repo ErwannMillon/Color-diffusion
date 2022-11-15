@@ -10,6 +10,8 @@ from main_model import forward_diffusion_sample, linear_beta_schedule
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import wandb
+from unet import SimpleUnet
+from icecream import ic
 
 def get_index_from_list(vals, t, x_shape):
     """ 
@@ -64,11 +66,11 @@ def sample_timestep(x, t, model, T=300):
         return cat_lab(x_l, ab_t_pred)
 
 # def sample_plot_image(x_l, model, device, T=300):
-def sample_plot_image(val_dl, model, device, T=300):
+def sample_plot_image(val_dl, model, device, T=300, log=True):
     model.eval()
     # print("hadsf")
     # # Sample noise
-    x = next(iter(val_dl)) 
+    x = next(iter(val_dl))[:1]
     x_l, _ = split_lab(x)
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
@@ -94,7 +96,7 @@ def sample_plot_image(val_dl, model, device, T=300):
             # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
-    show_lab_image(grid.unsqueeze(0))
+    show_lab_image(grid.unsqueeze(0), log=log)
     plt.show()     
 
 
@@ -103,12 +105,11 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
         device = torch.device("mps")
-    model = MainModel().to(device)
-    ckpt = "./saved_models/he_leaky_64.pt"
-    model.load_state_dict(torch.load(ckpt, map_location=device))
-    dataset = ColorizationDataset(["./data/bars.jpg"]);
-    dataloader = DataLoader(dataset, batch_size=1)
-    # x = torch.randn((1, 1, 256, 256))
-    x = next(iter(dataloader))
+    from train import config
+    train_dl, val_dl = make_dataloaders("./fairface", config)
+    # ckpt = "./saved_models/he_leaky_64.pt"
+    # model.load_state_dict(torch.load(ckpt, map_location=device))
+    model = SimpleUnet().to(device)
     model.eval()
-    sample_plot_image(x[:1, :1,...], model, device)
+    ic.disable()
+    sample_plot_image(val_dl, model, device, log=False)
