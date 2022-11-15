@@ -1,10 +1,12 @@
 from main_model import MainModel
+from icecream import ic
 import torchvision
 import torch
 from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
+from test_unet import SimpleUnet
 from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
 from main_model import forward_diffusion_sample, linear_beta_schedule
 import torch.nn.functional as F
@@ -118,12 +120,11 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
         device = torch.device("mps")
-    model = MainModel().to(device)
-    ckpt = "./saved_models/he_leaky_64.pt"
-    model.load_state_dict(torch.load(ckpt, map_location=device))
-    dataset = ColorizationDataset(["./data/bars.jpg"]);
-    dataloader = DataLoader(dataset, batch_size=1)
-    # x = torch.randn((1, 1, 256, 256))
-    x = next(iter(dataloader))
+    from train import config
+    train_dl, val_dl = make_dataloaders("./fairface", config)
+    # ckpt = "./saved_models/he_leaky_64.pt"
+    # model.load_state_dict(torch.load(ckpt, map_location=device))
+    model = SimpleUnet().to(device)
     model.eval()
-    sample_plot_image(x[:1, :1,...], model, device)
+    ic.disable()
+    sample_plot_image(val_dl, model, device, log=False)

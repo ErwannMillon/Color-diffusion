@@ -33,11 +33,11 @@ def show_lab_image(image, stepsize=10, log=True):
         images = wandb.Image(rgb_imgs, caption=f"x_0 to x_300 in steps of {stepsize}")
         wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
+    plt.show()
     # for i in range(rgb_imgs.shape[0]):
     #     plt.subplot(1, rgb_imgs.shape[0], i + 1)
     # plt.figure(figsize=(10, 10))
     # plt.ion()
-    # plt.show()
     
 def init_weights(net, init='norm', gain=0.02):
     

@@ -7,8 +7,6 @@ from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 
-
-
 class ColorizationDataset(Dataset):
     def __init__(self, paths, split='train', size=64, config=None):
         if config:
@@ -23,7 +21,7 @@ class ColorizationDataset(Dataset):
 
         self.split = split
         self.size = size
-        self.paths = paths
+        self.paths = paths[:100]
 
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")

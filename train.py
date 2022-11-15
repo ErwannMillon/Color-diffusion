@@ -43,30 +43,34 @@ def train_model(model, train_dl, val_dl, epochs, config,
     optim_diff = torch.optim.Adam(model.parameters(), lr=config["lr_unet"])
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
-            real_L, real_AB = split_lab(batch[:1, ...].to(device))
+            real_L, real_AB = split_lab(batch.to(device))
+            # show_lab_image(batch[2:3,], log=log)
+            # show_lab_image(batch[1:2,], log=log)
             # print(step)
-            diff_loss = optimize_diff(optim_diff, model, batch, 
-                                        device, config, step, e)
 
-            losses = dict(
-                diff_loss = diff_loss.item(),
-                )
-            #Rename
+            diff_loss = optimize_diff(optim_diff, model, batch, 
+                                        device, config, step, e, log=log)
+
+            losses = dict( diff_loss = diff_loss.item(),)
+
+            # Rename
             if step % display_every == 0:
-                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
-                if log:
-                    wandb.log({"val_loss": losses["val_loss"]})
-                print(f"epoch: {e}, loss {losses}")
+                # losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+                # if log:
+                #     wandb.log({"val_loss": losses["val_loss"]})
+                # print(f"epoch: {e}, loss {losses}")
+                model.eval()
+                sample_plot_image(None, model, device, x_l=real_L[:1], log=log)
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             # for name, weight in model.named_parameters():
-            #     writer.add_histogram(name,weight, e)
-            #     writer.add_histogram(f'{name}.grad',weight.grad, e)
+                # writer.add_histogram(name,weight, e)
+                # writer.add_histogram(f'{name}.grad',weight.grad, e)
             # add_to_tb(noise_pred, real_noise, e)
 
 config = dict (
-    batch_size = 1,
+    batch_size = 4,
     img_size = 64,
     lr_unet = 1e-3,
     device = get_device(),
@@ -75,7 +79,9 @@ config = dict (
 )
 if __name__ == "__main__":
     writer = SummaryWriter('runs/colordiff')
-    wandb.init(project="DiffColor", config=config)
+    log = False
+    if log: 
+        wandb.init(project="DiffColor", config=config)
     # dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
     # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     train_dl, val_dl = make_dataloaders("./fairface", config)
@@ -86,7 +92,7 @@ if __name__ == "__main__":
     ckpt = None
     ic.disable()
     train_model(diff_gen, train_dl, val_dl, 150,
-                ckpt=ckpt, log=True, sample=True,
+                ckpt=ckpt, log=log, sample=True,
                 save_interval=10, writer=writer, config=config)
 ############
 # def get_loss(model, x_0, t):
