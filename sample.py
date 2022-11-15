@@ -5,13 +5,12 @@ from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from utils import log_results, split_lab, update_losses, visualize, show_lab_image, cat_lab
+from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
 from main_model import forward_diffusion_sample, linear_beta_schedule
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import wandb
-from unet import SimpleUnet
-from icecream import ic
+from einops import rearrange
 
 def get_index_from_list(vals, t, x_shape):
     """ 
@@ -59,24 +58,36 @@ def sample_timestep(x, t, model, T=300):
     
     #TODO Experiment with returning this always
     if t == 0:
+        model_mean = dynamic_threshold(model_mean)
         return cat_lab(x_l, model_mean)
     else:
         noise = torch.randn_like(x_ab)
         ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
+        ab_t_pred = dynamic_threshold(ab_t_pred)
         return cat_lab(x_l, ab_t_pred)
 
-# def sample_plot_image(x_l, model, device, T=300):
-def sample_plot_image(val_dl, model, device, T=300, log=True):
-    model.eval()
+def dynamic_threshold(img, percentile=0.8):
+    s = torch.quantile(
+        rearrange(img, 'b ... -> b (...)').abs(),
+        percentile,
+        dim=-1
+    )
+
+    # If threshold is less than 1, simply clamp values to [-1., 1.]
+    s.clamp_(min=1.)
+    s = right_pad_dims_to(img, s)
+    # Clamp to +/- s and divide by s to bring values back to range [-1., 1.]
+    img = img.clamp(-s, s) / s
+    return img
+
+def sample_plot_image(x_l, model, device, T=300):
     # print("hadsf")
     # # Sample noise
-    x = next(iter(val_dl))[:1]
-    x_l, _ = split_lab(x)
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
-    # print(f"x_l.device = {x_l.device}")
     x_ab = torch.randn((1, 2, img_size, img_size), device=device)
+    # print(f"x_l.device = {x_l.device}")
     # print(f"x_ab.device = {x_ab.device}")
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
@@ -85,18 +96,20 @@ def sample_plot_image(val_dl, model, device, T=300, log=True):
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
+        # img = dynamic_threshold(img)
         if i % stepsize == 0:
             # print(torch.max(img[:, :1, ...]))
             # print(torch.max(img[:, 1:, ...]))
             # print(torch.min(img[:, :1, ...]))
             # print(torch.min(img[:, :1, ...]))
-            img = torch.nn.functional.normalize(img)
+            # img = torch.nn.functional.normalize(img)
+            # img = dynamic_threshold(img)
             # img = torch.clamp(img, -1, 1) 
             images += img.unsqueeze(0)
             # show_lab_image(img.detach().cpu())
             # show_tensor_image(img.detach().cpu())
     grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
-    show_lab_image(grid.unsqueeze(0), log=log)
+    show_lab_image(grid.unsqueeze(0))
     plt.show()     
 
 
@@ -105,11 +118,12 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
         device = torch.device("mps")
-    from train import config
-    train_dl, val_dl = make_dataloaders("./fairface", config)
-    # ckpt = "./saved_models/he_leaky_64.pt"
-    # model.load_state_dict(torch.load(ckpt, map_location=device))
-    model = SimpleUnet().to(device)
+    model = MainModel().to(device)
+    ckpt = "./saved_models/he_leaky_64.pt"
+    model.load_state_dict(torch.load(ckpt, map_location=device))
+    dataset = ColorizationDataset(["./data/bars.jpg"]);
+    dataloader = DataLoader(dataset, batch_size=1)
+    # x = torch.randn((1, 1, 256, 256))
+    x = next(iter(dataloader))
     model.eval()
-    ic.disable()
-    sample_plot_image(val_dl, model, device, log=False)
+    sample_plot_image(x[:1, :1,...], model, device)
