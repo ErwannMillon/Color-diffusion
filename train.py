@@ -70,7 +70,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
             # add_to_tb(noise_pred, real_noise, e)
 
 config = dict (
-    batch_size = 4,
+    batch_size = 2,
     img_size = 64,
     lr_unet = 1e-3,
     device = get_device(),
@@ -91,8 +91,8 @@ if __name__ == "__main__":
     # ckpt = "./saved_models/he_leaky_64.pt"
     ckpt = None
     ic.disable()
-    train_model(diff_gen, train_dl, val_dl, 150,
-                ckpt=ckpt, log=log, sample=True,
+    train_model(diff_gen, train_dl, val_dl, 1,
+                ckpt=ckpt, log=log, sample=True, display_every=1,
                 save_interval=10, writer=writer, config=config)
 ############
 # def get_loss(model, x_0, t):
