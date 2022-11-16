@@ -90,7 +90,7 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     if x_l is None:
         x = next(iter(val_dl))[:1,]
         x_l, _ = split_lab(x) 
-        images += x.to(device)
+        images += x.to(device).unsqueeze(0)
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
