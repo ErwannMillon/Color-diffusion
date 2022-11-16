@@ -51,6 +51,8 @@ def train_model(model, train_dl, val_dl, epochs, config,
                                         device, config, step, e, log=log)
 
             losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
+            if log:
+                wandb.log(diff_loss)
 
             # Rename
             if display_every is not None and step % display_every == 0:
@@ -61,8 +63,8 @@ def train_model(model, train_dl, val_dl, epochs, config,
                 model.eval()
                 # sample_plot_image(None, model, device, x_l=real_L[:1], log=log)
         if e % save_interval == 0:
-            print(f"epoch: {e}, loss {losses}")
             losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+            print(f"epoch: {e}, loss {losses}")
             if log:
                 wandb.log(losses)
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")

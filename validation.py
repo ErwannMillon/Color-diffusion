@@ -29,6 +29,6 @@ def validation_step(model, val_dl, device, config, sample=True, log=True):
         model.train()
     val_loss = get_val_loss(model, val_dl, device, config)
     # losses["val_loss"] = val_loss
-    return val_loss
+    return val_loss.item()
     if log:
         wandb.log({"val_loss": val_loss})
