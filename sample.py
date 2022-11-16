@@ -6,7 +6,7 @@ from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from test_unet import SimpleUnet
+from unet import SimpleUnet
 from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
 from main_model import forward_diffusion_sample, linear_beta_schedule
 import torch.nn.functional as F
