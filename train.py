@@ -21,7 +21,7 @@ from validation import get_val_loss, validation_step
 def optimize_diff(optim, model, batch, device,
                     config, step, e, log=True):
     real_L, real_AB = split_lab(batch[:1, ...].to(device))
-    t = torch.randint(0, config["T"], (config["batch_size"],), device=device).long()
+    t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
     # t = torch.Tensor([1]).to(device).long()
     # show_lab_image(noised_images)
     # show_lab_image(reconstructed_img.detach())
@@ -47,7 +47,6 @@ def train_model(model, train_dl, val_dl, epochs, config,
             # show_lab_image(batch[2:3,], log=log)
             # show_lab_image(batch[1:2,], log=log)
             # print(step)
-
             diff_loss = optimize_diff(optim_diff, model, batch, 
                                         device, config, step, e, log=log)
 
@@ -70,7 +69,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
             # add_to_tb(noise_pred, real_noise, e)
 
 config = dict (
-    batch_size = 2,
+    batch_size = 32,
     img_size = 64,
     lr_unet = 1e-3,
     device = get_device(),
