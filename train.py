@@ -54,12 +54,12 @@ def train_model(model, train_dl, val_dl, epochs, config,
 
             # Rename
             if step % display_every == 0:
-                # losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
-                # if log:
-                #     wandb.log({"val_loss": losses["val_loss"]})
-                # print(f"epoch: {e}, loss {losses}")
+                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+                if log:
+                    wandb.log({"val_loss": losses["val_loss"]})
+                print(f"epoch: {e}, loss {losses}")
                 model.eval()
-                sample_plot_image(None, model, device, x_l=real_L[:1], log=log)
+                # sample_plot_image(None, model, device, x_l=real_L[:1], log=log)
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
