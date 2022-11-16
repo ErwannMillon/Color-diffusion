@@ -53,7 +53,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
             losses = dict( diff_loss = diff_loss.item(),)
 
             # Rename
-            if step % display_every == 0:
+            if display_every is not None and step % display_every == 0:
                 losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
                 if log:
                     wandb.log({"val_loss": losses["val_loss"]})
@@ -62,6 +62,9 @@ def train_model(model, train_dl, val_dl, epochs, config,
                 # sample_plot_image(None, model, device, x_l=real_L[:1], log=log)
         if e % save_interval == 0:
             print(f"epoch: {e}, loss {losses}")
+            losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+            if log:
+                wandb.log({"val_loss": losses["val_loss"]})
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             # for name, weight in model.named_parameters():
                 # writer.add_histogram(name,weight, e)
