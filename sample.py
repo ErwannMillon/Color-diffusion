@@ -97,6 +97,8 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     num_images = 10
     stepsize = int(T/num_images)
     images = []
+    if x_l is None:
+        images += x
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
