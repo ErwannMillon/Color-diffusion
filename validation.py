@@ -22,10 +22,10 @@ def get_val_loss(model, val_dl, device, config, log=True):
     t = torch.randint(0, config["T"], (config["batch_size"],), device=device).long()
     return get_loss(model, val_batch, t, device)
 
-def validation_step(model, val_dl, device, config, sample=True):
+def validation_step(model, val_dl, device, config, sample=True, log=True):
     if sample:
         model.eval()
-        sample_plot_image(val_dl, model, device)
+        sample_plot_image(val_dl, model, device, log=log)
         model.train()
     val_loss = get_val_loss(model, val_dl, device, config)
     # losses["val_loss"] = val_loss

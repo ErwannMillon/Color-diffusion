@@ -54,7 +54,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
 
             # Rename
             if display_every is not None and step % display_every == 0:
-                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample, log=log)
                 if log:
                     wandb.log({"val_loss": losses["val_loss"]})
                 print(f"epoch: {e}, loss {losses}")
