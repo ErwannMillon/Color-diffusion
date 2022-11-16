@@ -86,9 +86,11 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     # print("hadsf")
     # # Sample noise
     model.eval()
+    images = []
     if x_l is None:
         x = next(iter(val_dl))[:1,]
         x_l, _ = split_lab(x) 
+        images += x
     img_size = x_l.shape[-1]
     # print(f"device = {device}")
     x_l = x_l.to(device)
@@ -96,9 +98,6 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = int(T/num_images)
-    images = []
-    if x_l is None:
-        images += x
     for i in range(0,T)[::-1]:
         t = torch.full((1,), i, device=device, dtype=torch.long)
         img = sample_timestep(img, t, model)
