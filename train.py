@@ -50,7 +50,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
             diff_loss = optimize_diff(optim_diff, model, batch, 
                                         device, config, step, e, log=log)
 
-            losses = dict( diff_loss = diff_loss.item(),)
+            losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
 
             # Rename
             if display_every is not None and step % display_every == 0:
@@ -64,7 +64,7 @@ def train_model(model, train_dl, val_dl, epochs, config,
             print(f"epoch: {e}, loss {losses}")
             losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
             if log:
-                wandb.log({"val_loss": losses["val_loss"]})
+                wandb.log(losses)
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
             # for name, weight in model.named_parameters():
                 # writer.add_histogram(name,weight, e)
