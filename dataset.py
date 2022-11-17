@@ -12,6 +12,8 @@ def is_greyscale(im):
     """
     Check if image is monochrome (1 channel or 3 identical channels)
     """
+    if im is str:
+        im = Image.open(str).convert("RGB")
     if im.mode not in ("L", "RGB"):
         raise ValueError("Unsuported image mode")
     if im.mode == "RGB":
