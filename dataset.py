@@ -38,12 +38,14 @@ class ColorizationDataset(Dataset):
         self.split = split
         self.size = size
         self.paths = paths[:limit]
+        self.paths = [path for path in self.paths if not is_greyscale(path)]
 
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")
-        while (is_greyscale(img) is True):
-            self.paths.pop(idx)
-            img = Image.open(self.paths[idx]).convert("RGB")
+        # while (is_greyscale(img) is True):
+        #     idx
+        #     self.paths.pop(idx)
+        #     img = Image.open(self.paths[idx]).convert("RGB")
         img = self.transforms(img)
         img = np.array(img)
         img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
