@@ -42,7 +42,6 @@ class ColorizationDataset(Dataset):
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")
         while (is_greyscale(img) is True):
-            print("greyscale")
             self.paths.pop(idx)
             img = Image.open(self.paths[idx]).convert("RGB")
         img = self.transforms(img)
