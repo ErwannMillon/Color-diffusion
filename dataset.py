@@ -8,6 +8,16 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image,ImageChops
 
+from PIL import Image, ImageStat
+
+def is_alt_greyscale(path="image.jpg"):
+    im = Image.open(path).convert("RGB")
+    stat = ImageStat.Stat(im)
+    if sum(stat.sum)/3 == stat.sum[0]: #check the avg with any element value
+        return True #if grayscale
+    else:
+        return False #else its colour
+
 def is_greyscale(im):
     """
     Check if image is monochrome (1 channel or 3 identical channels)
@@ -29,7 +39,7 @@ class ColorizationDataset(Dataset):
             size = config["img_size"]
         if split == 'train':
             self.transforms = transforms.Compose([
-               transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.45, hue=0.02),
+            #    transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.45, hue=0.02),
                 transforms.RandomHorizontalFlip(),  # A little data augmentation!
                 transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
                 transforms.Resize((size, size), Image.BICUBIC)
@@ -40,7 +50,7 @@ class ColorizationDataset(Dataset):
         self.split = split
         self.size = size
         self.paths = paths[:limit]
-        self.paths = [path for path in self.paths if not is_greyscale(path)]
+        self.paths = [path for path in self.paths if not is_alt_greyscale(path)]
 
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")
@@ -91,12 +101,21 @@ class ColorizationDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
+import csv
 def make_dataloaders(path, config, num_workers=0, limit=None):
-    train_paths = glob.glob(path + "/train/*.jpg")
+    # train_paths = glob.glob(path + "/train/*.jpg")
+    # val_paths = glob.glob(path + "/val/*.jpg")
+    with open("./train_filtered.csv", "r") as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        train_paths = data[0]
+    with open("./val_filtered.csv", "r") as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        val_paths = data[0]
     train_dataset = ColorizationDataset(train_paths, split="train", size=config["img_size"], limit=limit)
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
-    val_paths = glob.glob(path + "/val/*.jpg")
     val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"], limit=limit)
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
