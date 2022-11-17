@@ -23,11 +23,11 @@ def get_val_loss(model, val_dl, device, config, log=True):
     return get_loss(model, val_batch, t, device)
 
 def validation_step(model, val_dl, device, config, sample=True, log=True):
+    model.eval()
     if sample:
-        model.eval()
         sample_plot_image(val_dl, model, device, log=log)
-        model.train()
     val_loss = get_val_loss(model, val_dl, device, config)
+    model.train()
     # losses["val_loss"] = val_loss
     return val_loss.item()
     if log:

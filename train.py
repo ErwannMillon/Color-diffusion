@@ -51,10 +51,10 @@ def train_model(model, train_dl, val_dl, epochs, config,
                                         device, config, step, e, log=log)
 
             losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
-            if log:
-                wandb.log(losses)
             if step % 20 == 0:
                 losses["val_loss"] = validation_step(model, val_dl, device, config, sample=False, log=log)
+            if log:
+                wandb.log(losses)
 
             # Rename
             if display_every is not None and step % display_every == 0:
