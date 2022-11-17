@@ -6,7 +6,21 @@ import torch
 from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
+from PIL import Image,ImageChops
 
+def is_greyscale(im):
+    """
+    Check if image is monochrome (1 channel or 3 identical channels)
+    """
+    if im.mode not in ("L", "RGB"):
+        raise ValueError("Unsuported image mode")
+    if im.mode == "RGB":
+        rgb = im.split()
+        if ImageChops.difference(rgb[0],rgb[1]).getextrema()[1]!=0: 
+            return False
+        if ImageChops.difference(rgb[0],rgb[2]).getextrema()[1]!=0: 
+            return False
+    return True
 class ColorizationDataset(Dataset):
     def __init__(self, paths, split='train', size=64, config=None, limit=None):
         if config:
@@ -27,6 +41,10 @@ class ColorizationDataset(Dataset):
 
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")
+        while (is_greyscale(img) is True):
+            print("greyscale")
+            self.paths.pop(idx)
+            img = Image.open(self.paths[idx]).convert("RGB")
         img = self.transforms(img)
         img = np.array(img)
         img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
@@ -34,7 +52,6 @@ class ColorizationDataset(Dataset):
         L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return (torch.cat((L, ab), dim=0))
-        return {'L': L, 'ab': ab}
     def tensor_to_lab(self, base_img_tens):
         base_img = np.array(base_img_tens)
         img_lab = rgb2lab(base_img).astype("float32")  # Converting RGB to L*a*b
