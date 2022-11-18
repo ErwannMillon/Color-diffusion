@@ -42,15 +42,15 @@ class ColorizationDataset(Dataset):
             #    transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.45, hue=0.02),
                 transforms.RandomHorizontalFlip(),  # A little data augmentation!
                 transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
-                transforms.Resize((size, size), Image.BICUBIC)
+                transforms.Resize((size, size), Image.Resampling.BICUBIC)
             ])
         elif split == 'val':
-            self.transforms = transforms.Resize((size, size), Image.BICUBIC)
+            self.transforms = transforms.Resize((size, size), Image.Resampling.BICUBIC)
 
         self.split = split
         self.size = size
         self.paths = paths[:limit]
-        self.paths = [path for path in self.paths if not is_alt_greyscale(path)]
+        # self.paths = [path for path in self.paths if not is_alt_greyscale(path)]
 
     def __getitem__(self, idx):
         img = Image.open(self.paths[idx]).convert("RGB")
@@ -114,9 +114,14 @@ def make_dataloaders(path, config, num_workers=0, limit=None):
         data = list(reader)
         val_paths = data[0]
     train_dataset = ColorizationDataset(train_paths, split="train", size=config["img_size"], limit=limit)
+    print(f"train size: {len(train_dataset.paths)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
     val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"], limit=limit)
+    print(f"train size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
     return train_dl, val_dl
+if __name__ == "__main__":
+    from train import config
+    x, y = make_dataloaders('jl', config)
