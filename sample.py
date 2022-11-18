@@ -91,11 +91,12 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
         x = next(iter(val_dl))[:1,]
         x_l, _ = split_lab(x) 
         images += x.to(device).unsqueeze(0)
-        bw = torch.cat((x_l, torch.zeros_like(x_l), torch.zeros_like(x_l)), dim=1).to(device)
-        images += bw.unsqueeze(0)
+        # bw = torch.cat((x_l, torch.zeros_like(x_l), torch.zeros_like(x_l)), dim=1).to(device)
+        # images += bw.unsqueeze(0)
     img_size = x_l.shape[-1]
-    # print(f"device = {device}")
     x_l = x_l.to(device)
+    bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1).to(device)
+    images += bw.unsqueeze(0)
     x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size), device=device)
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
@@ -125,4 +126,6 @@ if __name__ == "__main__":
     model = SimpleUnet().to(device)
     model.eval()
     ic.disable()
-    sample_plot_image(val_dl, model, device, log=False)
+    x = next(iter(val_dl))[:1,]
+    x_l, _ = split_lab(x) # print(f"device = {device}")
+    sample_plot_image(None, model, device, x_l=x_l, log=False)
