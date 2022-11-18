@@ -29,8 +29,8 @@ def optimize_diff(optim, model, batch, device,
     loss = get_loss(model, batch, t, device)
     loss.backward()
     optim.step()
-    if (log):
-        wandb.log({"epoch":e, "step":step, "loss":loss.item()})
+    # if (log):
+        # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
     return loss;
 
 def train_model(model, train_dl, val_dl, epochs, config, 

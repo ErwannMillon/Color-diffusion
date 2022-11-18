@@ -118,7 +118,7 @@ def make_dataloaders(path, config, num_workers=0, limit=None):
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
     val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"], limit=limit)
-    print(f"train size: {len(val_dataset.paths)}")
+    print(f"val size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
     return train_dl, val_dl
