@@ -7,8 +7,10 @@ from utils import print_distrib, split_lab
 
 
 class Block(nn.Module):
-    def __init__(self, in_ch, out_ch, time_emb_dim, up=False, scale=1):
+    def __init__(self, in_ch, out_ch, time_emb_dim, up=False, scale=1, first=True):
         super().__init__()
+        self.first = first
+        self.up = up
         self.time_mlp =  nn.Linear(time_emb_dim, out_ch)
         if up:
             self.conv1 = nn.Conv2d(int(2 * scale) * in_ch, out_ch, 3, padding=1)
@@ -20,6 +22,7 @@ class Block(nn.Module):
         self.bnorm1 = nn.BatchNorm2d(out_ch)
         self.bnorm2 = nn.BatchNorm2d(out_ch)
         self.relu  = nn.LeakyReLU(0.02)
+        self.dropout = nn.Dropout(0.5)
         # self.tanh = nn.Tanh()
         
     def forward(self, x, t, ):
@@ -56,7 +59,10 @@ class Block(nn.Module):
         # print_distrib(h)
         # h = self.bnorm2(self.tanh(self.conv2(h)))
         # Down or Upsample
-        return self.transform(h)
+        final = self.transform(h)
+        if self.up and self.first is False:
+            final = self.dropout(final)  
+        return final
 
 class CondBlock(Block):
     def __init__(self, in_ch, out_ch, time_emb_dim, **kwargs):
@@ -122,7 +128,7 @@ class SimpleUnet(nn.Module):
                     for i in range(len(down_channels)-1)])
         # Upsample
         self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
-                                        time_emb_dim, up=True) \
+                                        time_emb_dim, up=True, first=(i == 0)) \
                     for i in range(len(up_channels)-1)])
         self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
