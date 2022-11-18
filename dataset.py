@@ -42,10 +42,10 @@ class ColorizationDataset(Dataset):
             #    transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.45, hue=0.02),
                 transforms.RandomHorizontalFlip(),  # A little data augmentation!
                 transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
-                transforms.Resize((size, size), Image.Resampling.BICUBIC)
+                transforms.Resize((size, size), Image.BICUBIC)
             ])
         elif split == 'val':
-            self.transforms = transforms.Resize((size, size), Image.Resampling.BICUBIC)
+            self.transforms = transforms.Resize((size, size), Image.BICUBIC)
 
         self.split = split
         self.size = size
