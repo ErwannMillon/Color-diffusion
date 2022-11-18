@@ -97,6 +97,8 @@ def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     x_l = x_l.to(device)
     bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1).to(device)
     images += bw.unsqueeze(0)
+    if len(x_l.shape) == 3:
+        x_l = x_l.unsqueeze(0)
     x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size), device=device)
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
