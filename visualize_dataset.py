@@ -9,7 +9,8 @@ import random
 from utils import show_lab_image
 from PIL import Image,ImageChops
 from dataset import is_greyscale
-from skimage.color import rgb2lab, lab2rgb
+# from skimagecolor import rgb2lab, lab2rgb
+import skimage
 import numpy as np
 
 config["batch_size"] = 48
