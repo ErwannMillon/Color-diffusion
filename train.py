@@ -22,16 +22,17 @@ def optimize_diff(optim, model, batch, device,
                     config, step, e, log=True):
     real_L, real_AB = split_lab(batch[:1, ...].to(device))
     t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
-    # t = torch.Tensor([1]).to(device).long()
-    # show_lab_image(noised_images)
-    # show_lab_image(reconstructed_img.detach())
     optim.zero_grad()
     loss = get_loss(model, batch, t, device)
     loss.backward()
     optim.step()
-    # if (log):
-        # wandb.log({"epoch":e, "step":step, "loss":loss.item()})
     return loss;
+
+def validation_update(step, losses, model, val_dl, config, sample=True, log=True):
+    losses["val_loss"] = validation_step(model, val_dl, device, config, sample=True, log=log)
+    if log:
+        wandb.log(losses)
+    return (losses)
 
 def train_model(model, train_dl, val_dl, epochs, config, 
                 save_interval=15, display_every=200, 
@@ -44,34 +45,18 @@ def train_model(model, train_dl, val_dl, epochs, config,
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
             real_L, real_AB = split_lab(batch.to(device))
-            # show_lab_image(batch[2:3,], log=log)
-            # show_lab_image(batch[1:2,], log=log)
-            # print(step)
             diff_loss = optimize_diff(optim_diff, model, batch, 
                                         device, config, step, e, log=log)
-
             losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
             if step % 20 == 0:
-                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=False, log=log)
-            if log:
-                wandb.log(losses)
-
-            # Rename
+                losses = validation_update(step, losses, model, val_dl, config, sample=False, log=log)
             if display_every is not None and step % display_every == 0:
-                losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample, log=log)
-                if log:
-                    wandb.log({"val_loss": losses["val_loss"]})
+                losses = validation_update(step, losses, model, val_dl, config, sample=True, log=log)
                 print(f"epoch: {e}, loss {losses}")
         if e % save_interval == 0:
-            losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample)
+            losses = validation_update(step, losses, model, val_dl, config, sample=True, log=log)
             print(f"epoch: {e}, loss {losses}")
-            if log:
-                wandb.log(losses)
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
-            # for name, weight in model.named_parameters():
-                # writer.add_histogram(name,weight, e)
-                # writer.add_histogram(f'{name}.grad',weight.grad, e)
-            # add_to_tb(noise_pred, real_noise, e)
 
 config = dict (
     batch_size = 32,
@@ -89,7 +74,7 @@ if __name__ == "__main__":
         wandb.init(project="DiffColor", config=config)
     # dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
     # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
-    train_dl, val_dl = make_dataloaders("./fairface", config)
+    train_dl, val_dl = make_dataloaders("./preprocessed_fairface", config)
     device = get_device()
     diff_gen = SimpleUnet().to(device)
     print(f"using device {device}")

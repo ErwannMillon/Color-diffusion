@@ -9,7 +9,7 @@ import random
 from utils import show_lab_image
 from PIL import Image,ImageChops
 from dataset import is_greyscale
-# from skimagecolor import rgb2lab, lab2rgb
+from skimage.color import rgb2lab, lab2rgb
 import skimage
 import numpy as np
 
