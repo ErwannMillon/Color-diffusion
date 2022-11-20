@@ -74,7 +74,7 @@ class ColorizationDataset(Dataset):
         # L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         # ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         # return (torch.cat((L, ab), dim=0))
-        return(torch.load(self.paths[idx], map_location=self.device))
+        return(torch.load(self.paths[idx]))
     def tensor_to_lab(self, base_img_tens):
         base_img = np.array(base_img_tens)
         img_lab = rgb2lab(base_img).astype("float32")  # Converting RGB to L*a*b
