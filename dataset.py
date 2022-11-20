@@ -125,11 +125,11 @@ def make_dataloaders(path, config, num_workers=0, limit=None):
     #     reader = csv.reader(f)
     #     data = list(reader)
     #     val_paths = data[0]
-    train_dataset = ColorizationDataset(train_paths, split="train", size=config["img_size"], limit=limit)
+    train_dataset = ColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
     print(f"train size: {len(train_dataset.paths)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
-    val_dataset = ColorizationDataset(val_paths, split="val", size=config["img_size"], limit=limit)
+    val_dataset = ColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
     print(f"val size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
