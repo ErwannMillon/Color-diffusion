@@ -38,6 +38,7 @@ def optimize_model(model, batch, device,
     return loss;
 
 def validation_update(step, losses, model, val_dl, config, sample=True, log=True):
+    device = config["device"]
     losses["val_loss"] = validation_step(model, val_dl, device, config, sample=True, log=log)
     if log:
         wandb.log(losses)

@@ -24,11 +24,12 @@ def get_val_loss(model, val_dl, device, config, log=True):
 
 def validation_step(model, val_dl, device, config, sample=True, log=True):
     model.eval()
-    if sample:
-        sample_plot_image(val_dl, model, device, log=log)
-    val_loss = get_val_loss(model, val_dl, device, config)
-    model.train()
-    # losses["val_loss"] = val_loss
-    return val_loss.detach().item()
+    with torch.no_grad():
+        if sample:
+            sample_plot_image(val_dl, model, device, log=log)
+        val_loss = get_val_loss(model, val_dl, device, config)
+        model.train()
+        # losses["val_loss"] = val_loss
+        return val_loss.detach().item()
     if log:
         wandb.log({"val_loss": val_loss})
