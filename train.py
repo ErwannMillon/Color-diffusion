@@ -16,11 +16,14 @@ import torch.nn.functional as F
 import wandb
 from unet import SimpleCondUnet, SimpleUnet
 from validation import get_val_loss, validation_step
-
+from stable_diffusion.model.unet import UNetModel
+import stable_diffusion
+from cond_encoder import Encoder
 #HYPERPARAMS
+
 def optimize_diff(optim, model, batch, device,
                     config, step, e, log=True):
-    real_L, real_AB = split_lab(batch[:1, ...].to(device))
+    # real_L, real_AB = split_lab(batch[:1, ...].to(device))
     t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
     optim.zero_grad()
     loss = get_loss(model, batch, t, device)
@@ -44,7 +47,6 @@ def train_model(model, train_dl, val_dl, epochs, config,
     optim_diff = torch.optim.Adam(model.parameters(), lr=config["lr_unet"])
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
-            real_L, real_AB = split_lab(batch.to(device))
             diff_loss = optimize_diff(optim_diff, model, batch, 
                                         device, config, step, e, log=log)
             losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
@@ -64,6 +66,7 @@ config = dict (
     lr_unet = 1e-3,
     device = get_device(),
     pin_memory = torch.cuda.is_available(),
+    cond_channels=
     T = 300
 )
 
@@ -76,14 +79,29 @@ if __name__ == "__main__":
     # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     train_dl, val_dl = make_dataloaders("./preprocessed_fairface", config)
     device = get_device()
-    diff_gen = SimpleUnet().to(device)
+    diff_gen = UNetModel(   in_channels=3,
+                            out_channels=2,
+                            channels=256,
+                            attention_levels=[0, 1, 2],
+                            n_res_blocks=2,
+                            channel_multipliers=[1, 2, 4, 4],
+                            n_heads=2,
+                            tf_layers=1,
+                            d_cond=512)
+    cond_encoder = Encoder( in_channels=1,
+                            channels=64,
+                            channel_multipliers=[1, 2, 2, 2],
+                            n_resnet_blocks=2,
+                            z_channels=512 
+                            )
+    
     print(f"using device {device}")
     # ckpt = "./saved_models/he_leaky_64.pt"
     ckpt = None
     ic.disable()
-    train_model(diff_gen, train_dl, val_dl, 1,
-                ckpt=ckpt, log=log, sample=True, display_every=1,
-                save_interval=10, writer=writer, config=config)
+    # train_model(diff_gen, train_dl, val_dl, 1,
+    #             ckpt=ckpt, log=log, sample=True, display_every=1,
+    #             save_interval=10, writer=writer, config=config)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
