@@ -3,7 +3,7 @@ from typing import List
 import torch
 import torch.nn.functional as F
 from torch import nn
-
+from einops import rearrange
 
 class Encoder(nn.Module):
     """
@@ -90,8 +90,11 @@ class Encoder(nn.Module):
         x = self.norm_out(x)
         x = swish(x)
         x = self.conv_out(x)
+
         x = self.avgpool(x)
-        x = self.ff_out(torch.flatten(x, start_dim=1, end_dim=-1))
+        x = torch.flatten(x, start_dim=1, end_dim=-1)
+        x = self.ff_out(x)
+        x = rearrange(x, "b d -> b 1 d") 
         #
         return x
 

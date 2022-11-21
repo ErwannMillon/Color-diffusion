@@ -43,12 +43,12 @@ if __name__ == "__main__":
                             channel_multipliers=[1, 2, 4, 4],
                             n_heads=2,
                             tf_layers=1,
-                            d_cond=512)
+                            d_cond=1024)
     cond_encoder = Encoder( in_channels=1,
                             channels=64,
                             channel_multipliers=[1, 2, 2, 2],
                             n_resnet_blocks=2,
-                            z_channels=1024 
+                            z_channels=512 
                             )
 
     diff_gen.to(device)
