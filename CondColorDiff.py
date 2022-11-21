@@ -26,7 +26,7 @@ encoder_defaults = dict(
 	in_channels=1,
 	channels=64,
 	channel_multipliers=[1, 2, 2, 2],
-	n_resnet_blocks=2,
+	n_resnet_blocks=1,
 	z_channels=256 
 
 )
@@ -34,9 +34,9 @@ diffusion_defaults = dict(
 	in_channels=3,
 	out_channels=2,
 	channels=256,
-	attention_levels=[0, 1, 2],
+	attention_levels=[1, 2],
 	n_res_blocks=2,
-	channel_multipliers=[1, 2, 4, 4],
+	channel_multipliers=[1, 2, 2, 4],
 	n_heads=2,
 	tf_layers=1,
 	d_cond=512
