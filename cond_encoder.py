@@ -61,9 +61,9 @@ class Encoder(nn.Module):
 
         # Map to embedding space with a $3 \times 3$ convolution
         self.norm_out = normalization(channels)
-        self.conv_out = nn.Conv2d(channels, 2 * z_channels, 3, stride=1, padding=1)
+        self.conv_out = nn.Conv2d(channels, z_channels, 3, stride=1, padding=1)
         self.avgpool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
-        self.ff_out = nn.Linear(z_channels, z_channels)
+        self.ff_out = nn.Linear(z_channels, 2 * z_channels)
 
     def forward(self, img: torch.Tensor):
         """
@@ -91,8 +91,7 @@ class Encoder(nn.Module):
         x = swish(x)
         x = self.conv_out(x)
         x = self.avgpool(x)
-        x = self.ff_out(x)
-
+        x = self.ff_out(torch.flatten(x, start_dim=1, end_dim=-1))
         #
         return x
 

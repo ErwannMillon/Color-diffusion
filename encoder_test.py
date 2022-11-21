@@ -48,7 +48,7 @@ if __name__ == "__main__":
                             channels=64,
                             channel_multipliers=[1, 2, 2, 2],
                             n_resnet_blocks=2,
-                            z_channels=512 
+                            z_channels=1024 
                             )
 
     diff_gen.to(device)
