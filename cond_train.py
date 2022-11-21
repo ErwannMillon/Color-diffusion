@@ -65,17 +65,18 @@ def train_model(model:CondColorDiff, train_dl, val_dl, epochs, config,
             print(f"epoch: {e}, loss {losses}")
             torch.save(model.state_dict(), f"./saved_models/model_{e}_.pt")
 
-config = dict (
-    batch_size = 32,
-    img_size = 64,
-    lr_unet = 1e-3,
-    lr_enc = 1e-3,
-    device = get_device(),
-    pin_memory = torch.cuda.is_available(),
-    T = 300
-)
+
 
 if __name__ == "__main__":
+    config = dict (
+        batch_size = 32,
+        img_size = 64,
+        lr_unet = 1e-3,
+        lr_enc = 1e-3,
+        device = get_device(),
+        pin_memory = torch.cuda.is_available(),
+        T = 300
+    )
     writer = SummaryWriter('runs/colordiff')
     log = False
     if log: 

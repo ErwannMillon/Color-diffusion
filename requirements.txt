@@ -8,3 +8,6 @@ torch
 torchinfo
 torchvision
 tqdm
+wandb
+labml
+labml-nn
