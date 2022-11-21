@@ -33,7 +33,7 @@ def optimize_model(model, batch, device,
     noise_pred = model(x_noisy, t, x_l)
     loss = torch.nn.functional.l1_loss(noise, noise_pred)
     loss.backward()
-    model.diff_enc.step()
+    model.diff_optim.step()
     model.enc_optim.step()
     return loss;
 
