@@ -17,7 +17,7 @@ import wandb
 from unet import SimpleCondUnet, SimpleUnet
 
 def get_val_loss(model, val_dl, device, config, log=True):
-    val_batch = next(iter(val_dl)).detach()
+    val_batch = next(iter(val_dl)).detach().to(device)
     real_L, real_AB = split_lab(val_batch[:1, ...].to(device))
     t = torch.randint(0, config["T"], (config["batch_size"],), device=device).long()
     return get_loss(model, val_batch, t, device)
