@@ -31,7 +31,6 @@ def optimize_model(model, batch, device,
     model.diff_optim.zero_grad()
     model.enc_optim.zero_grad()
     noise_pred = model(x_noisy, t, x_l)
-    print(noise_pred.shape)
     loss = torch.nn.functional.l1_loss(noise, noise_pred)
     loss.backward()
     model.diff_enc.step()
