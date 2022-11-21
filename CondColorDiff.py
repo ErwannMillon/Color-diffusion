@@ -57,4 +57,5 @@ class CondColorDiff(nn.Module):
 	def forward(self, x_t, t, cond_img):
 		cond_emb = self.encoder(cond_img)
 		noise_pred = self.diff_gen(x_t, t, cond_emb)
+		return noise_pred
 		# return torch.nn.functional.l1_loss(noise, noise_pred)
