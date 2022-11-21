@@ -49,14 +49,15 @@ class CondColorDiff(nn.Module):
 				encoder_config=encoder_defaults, 
 				diffusion_config=diffusion_defaults) -> None:
 		super().__init__() 
-		self.encoder = Encoder(**encoder_config)
-		# self.encoder = torch.nn.DataParallel(self.encoder)
 		self.device = config["device"]
-		self.diff_gen = UNetModel(**diffusion_config)
+		self.encoder = Encoder(**encoder_config).to(self.device)
+		# self.encoder = torch.nn.DataParallel(self.encoder)
+		self.diff_gen = UNetModel(**diffusion_config).to(self.device)
 		# self.diff_gen = torch.nn.DataParallel(self.diff_gen)
 		self.enc_optim = torch.optim.Adam(self.encoder.parameters(), lr=config["lr_enc"])
 		self.diff_optim = torch.optim.Adam(self.diff_gen.parameters(), lr=config["lr_unet"])
 	def forward(self, x_t, t, cond_img):
+		cond_img = cond_img.to(self.device)
 		cond_emb = self.encoder(cond_img)
 		noise_pred = self.diff_gen(x_t, t, cond_emb)
 		return noise_pred
