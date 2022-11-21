@@ -39,7 +39,7 @@ def optimize_model(model, batch, device,
 
 def validation_update(step, losses, model, val_dl, config, sample=True, log=True):
     device = config["device"]
-    losses["val_loss"] = validation_step(model, val_dl, device, config, sample=True, log=log)
+    losses["val_loss"] = validation_step(model, val_dl, device, config, sample=sample, log=log)
     if log:
         wandb.log(losses)
     return (losses)
@@ -58,6 +58,7 @@ def train_model(model:CondColorDiff, train_dl, val_dl, epochs, config,
             losses = dict(diff_loss=diff_loss.item(), step = step, epoch=e)
             if step % 20 == 0:
                 losses = validation_update(step, losses, model, val_dl, config, sample=False, log=log)
+                print(f"epoch: {e}, loss {losses}")
             if display_every is not None and step % display_every == 0:
                 losses = validation_update(step, losses, model, val_dl, config, sample=True, log=log)
                 print(f"epoch: {e}, loss {losses}")
