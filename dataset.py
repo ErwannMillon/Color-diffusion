@@ -116,9 +116,16 @@ class PickleColorizationDataset(ColorizationDataset):
     def __getitem__(self, idx):
         return(torch.load(self.paths[idx]))
 import csv
-def make_dataloaders(path, config, num_workers=0, limit=None):
-    train_paths = glob.glob(path + "/train/*.pt")
-    val_paths = glob.glob(path + "/val/*.pt")
+def make_dataloaders(path, config, num_workers=0, limit=None, pickle=True):
+    train_paths = glob.glob(path + "/train/*")
+    val_paths = glob.glob(path + "/val/*")
+    if pickle:
+        train_dataset = PickleColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
+        val_dataset = PickleColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
+    else:
+        train_dataset = ColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
+        val_dataset = ColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
+
     # with open("./train_filtered.csv", "r") as f:
     #     reader = csv.reader(f)
     #     data = list(reader)
@@ -127,11 +134,9 @@ def make_dataloaders(path, config, num_workers=0, limit=None):
     #     reader = csv.reader(f)
     #     data = list(reader)
     #     val_paths = data[0]
-    train_dataset = ColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
     print(f"train size: {len(train_dataset.paths)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
-    val_dataset = ColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
     print(f"val size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
