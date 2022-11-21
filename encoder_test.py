@@ -33,7 +33,7 @@ config = dict (
 if __name__ == "__main__":
     train_dl, val_dl = make_dataloaders("./preprocessed_fairface", config)
     device = get_device()
-    x = next(iter(train_dl)).to("mps")
+    x = next(iter(train_dl)).to(device)
     x_l, _ = split_lab(x)
     diff_gen = UNetModel(   in_channels=3,
                             out_channels=2,
@@ -51,8 +51,8 @@ if __name__ == "__main__":
                             z_channels=512 
                             )
 
-    diff_gen.to("mps")
-    cond_encoder.to("mps")
+    diff_gen.to(device)
+    cond_encoder.to(device)
     t = torch.randint(0, config["T"], (x.shape[0],), device=device).long()
     cond = cond_encoder(x_l) 
     pred = diff_gen(x, t, cond)
