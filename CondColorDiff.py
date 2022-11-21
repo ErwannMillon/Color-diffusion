@@ -50,8 +50,10 @@ class CondColorDiff(nn.Module):
 				diffusion_config=diffusion_defaults) -> None:
 		super().__init__() 
 		self.encoder = Encoder(**encoder_config)
+		self.encoder = torch.nn.DataParallel(self.encoder)
 		self.device = config["device"]
 		self.diff_gen = UNetModel(**diffusion_config)
+		self.diff_gen = torch.nn.DataParallel(self.diff_gen)
 		self.enc_optim = torch.optim.Adam(self.encoder.parameters(), lr=config["lr_enc"])
 		self.diff_optim = torch.optim.Adam(self.diff_gen.parameters(), lr=config["lr_unet"])
 	def forward(self, x_t, t, cond_img):
