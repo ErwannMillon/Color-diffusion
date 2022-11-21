@@ -66,7 +66,6 @@ config = dict (
     lr_unet = 1e-3,
     device = get_device(),
     pin_memory = torch.cuda.is_available(),
-    cond_channels=
     T = 300
 )
 
@@ -126,6 +125,6 @@ if __name__ == "__main__":
 #       loss.backward()
 #       optimizer.step()
 
-#       if epoch % 5 == 0 and step == 0:
 #         print(f"Epoch {epoch} | step {step:03d} Loss: {loss.item()} ")
+#       if epoch % 5 == 0 and step == 0:
 #         sample_plot_image()
