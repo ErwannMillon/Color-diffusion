@@ -102,7 +102,7 @@ class UNetModel(nn.Module):
         # The middle of the U-Net
         self.middle_block = TimestepEmbedSequential(
             ResBlock(channels, d_time_emb),
-            SpatialTransformer(channels, n_heads, tf_layers, d_cond),
+            # SpatialTransformer(channels, n_heads, tf_layers, d_cond),
             ResBlock(channels, d_time_emb),
         )
 

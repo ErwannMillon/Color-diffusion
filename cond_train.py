@@ -29,12 +29,12 @@ def optimize_model(model, batch, device,
     t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
     x_noisy, noise = forward_diffusion_sample(batch, t, device)
     model.diff_optim.zero_grad()
-    model.enc_optim.zero_grad()
+    # model.enc_optim.zero_grad()
     noise_pred = model(x_noisy, t, x_l)
     loss = torch.nn.functional.l1_loss(noise, noise_pred)
     loss.backward()
     model.diff_optim.step()
-    model.enc_optim.step()
+    # model.enc_optim.step()
     return loss;
 
 def validation_update(step, losses, model, val_dl, config, sample=True, log=True):

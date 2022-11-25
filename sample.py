@@ -85,17 +85,18 @@ def dynamic_threshold(img, percentile=0.8):
 def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
     # print("hadsf")
     # # Sample noise
+    print("sample deivce", device)
     model.eval()
     images = []
     if x_l is None:
-        x = next(iter(val_dl))[:1,]
+        x = next(iter(val_dl))[:1,].to(device)
         x_l, _ = split_lab(x) 
         images += x.to(device).unsqueeze(0)
         # bw = torch.cat((x_l, torch.zeros_like(x_l), torch.zeros_like(x_l)), dim=1).to(device)
         # images += bw.unsqueeze(0)
     img_size = x_l.shape[-1]
     x_l = x_l.to(device)
-    bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1).to(device)
+    bw = torch.cat((x_l, *[torch.zeros_like(x_l, device=device)] * 2), dim=1).to(device)
     images += bw.unsqueeze(0)
     if len(x_l.shape) == 3:
         x_l = x_l.unsqueeze(0)
