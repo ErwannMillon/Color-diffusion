@@ -45,7 +45,6 @@ def train_model(diff_gen, encoder, train_dl, val_dl, epochs, config,
     test = ColorizationDataset(["./data/croppedme.jpg"], split="val")
     me = next(iter(test))
     me_xl, _ = split_lab(me.unsqueeze(0))
-    sample_plot_image(None, diff_gen, device, x_l=me_xl)
     if ckpt:
         diff_gen.load_state_dict(torch.load(ckpt, map_location=device))
     diff_gen.train()
