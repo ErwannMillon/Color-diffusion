@@ -44,13 +44,15 @@ class PLColorDiff(pl.LightningModule):
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
-        if self.sample and batch_idx % self.display_every == 0:
-            x_l, _ = split_lab(batch)
-            self.sample_plot_image(x_l, self.T, self.log)
         self.log("val loss", val_loss)
         return val_loss
     def configure_optimizers(self):
         return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
+    def on_validation_batch_end(self, outputs, batch, batch_idx, dl_idx):
+        if self.sample and batch_idx % self.display_every == 0:
+            x_l, _ = split_lab(batch)
+            self.sample_plot_image(x_l, self.T, self.log)
+
     def sample_timestep(self, x, t, T=300):
         """
         Calls the model to predict the noise in the image and returns 
