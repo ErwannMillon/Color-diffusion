@@ -65,7 +65,6 @@ def dynamic_threshold(img, percentile=0.8):
         percentile,
         dim=-1
     )
-
     # If threshold is less than 1, simply clamp values to [-1., 1.]
     s.clamp_(min=1.)
     s = right_pad_dims_to(img, s)
@@ -89,7 +88,7 @@ def sample_plot_image(x_l, model, T=300, log=False):
         img = sample_timestep(img, t, model)
         if i % stepsize == 0:
             images += img.unsqueeze(0)
-    grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
+    grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
     show_lab_image(grid.unsqueeze(0), log=log)
     plt.show()     
 
