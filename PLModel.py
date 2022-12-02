@@ -29,7 +29,7 @@ class PLColorDiff(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x_0 = batch
         x_l, _ = split_lab(batch)
-        t = torch.randint(0, self.T, (batch.shape[0],))
+        t = torch.randint(0, self.T, (batch.shape[0],)).to(x_0)
         x_noisy, noise = forward_diffusion_sample(x_0, t, T=self.T)
         if self.using_cond:
             noise_pred = self.unet(x_noisy, t, x_l)
