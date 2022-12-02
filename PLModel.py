@@ -53,7 +53,7 @@ class PLColorDiff(pl.LightningModule):
         the denoised image. 
         Applies noise to this image, if we are not in the last step yet.
         """
-        betas = linear_beta_schedule(timesteps=T)
+        betas = linear_beta_schedule(timesteps=T).to(x)
         alphas = 1. - betas
         alphas_cumprod = torch.cumprod(alphas, axis=0)
         alphas_cumprod_prev = F.pad(alphas_cumprod[:-1], (1, 0), value=1.0)
