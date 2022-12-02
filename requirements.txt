@@ -1,10 +1,16 @@
 einops
+einops_exts
+helpers
 icecream
+labml_nn
+layers
 matplotlib
 numpy
 Pillow
+pytorch_lightning
 scikit_image
 torch
 torchinfo
 torchvision
 tqdm
+tensorboard

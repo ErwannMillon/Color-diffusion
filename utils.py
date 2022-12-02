@@ -7,10 +7,7 @@ from skimage.color import rgb2lab, lab2rgb
 import matplotlib.pyplot as plt
 from torch import nn
 import torch.nn.functional as F
-
 import torch
-
-from main_model import forward_diffusion_sample
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -62,7 +59,7 @@ def init_weights(net, init='norm', gain=0.02):
     return net
 
 def init_model(model, device, init):
-    model = model.to(device)
+    # model = model
     model = init_weights(model, init)
     return model
 class AverageMeter:
@@ -79,6 +76,7 @@ class AverageMeter:
 
 
 def get_loss(model, x_0, t, device="cuda"):
+    from diffusion import forward_diffusion_sample
     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
     noise_pred = model(x_noisy, t)
     return torch.nn.functional.l1_loss(noise, noise_pred)

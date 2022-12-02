@@ -62,19 +62,18 @@ class ColorizationDataset(Dataset):
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return (torch.cat((L, ab), dim=0))
     def __getitem__(self, idx):
-        # img = Image.open(self.paths[idx]).convert("RGB")
-        # # while (is_greyscale(img) is True):
-        # #     idx
-        # #     self.paths.pop(idx)
-        # #     img = Image.open(self.paths[idx]).convert("RGB")
-        # img = self.transforms(img)
-        # img = np.array(img)
-        # img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
-        # img_lab = transforms.ToTensor()(img_lab)
-        # L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
-        # ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
-        # return (torch.cat((L, ab), dim=0))
-        return(torch.load(self.paths[idx]))
+        img = Image.open(self.paths[idx]).convert("RGB")
+        # while (is_greyscale(img) is True):
+        #     idx
+        #     self.paths.pop(idx)
+        #     img = Image.open(self.paths[idx]).convert("RGB")
+        img = self.transforms(img)
+        img = np.array(img)
+        img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
+        img_lab = transforms.ToTensor()(img_lab)
+        L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
+        ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
+        return (torch.cat((L, ab), dim=0))
     def tensor_to_lab(self, base_img_tens):
         base_img = np.array(base_img_tens)
         img_lab = rgb2lab(base_img).astype("float32")  # Converting RGB to L*a*b
@@ -113,23 +112,34 @@ class ColorizationDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
+class PickleColorizationDataset(ColorizationDataset):
+    def __getitem__(self, idx):
+        return(torch.load(self.paths[idx]))
 import csv
-def make_dataloaders(path, config, num_workers=0, limit=None):
-    train_paths = glob.glob(path + "/train/*.pt")
-    val_paths = glob.glob(path + "/val/*.pt")
-    # with open("./train_filtered.csv", "r") as f:
-    #     reader = csv.reader(f)
-    #     data = list(reader)
-    #     train_paths = data[0]
-    # with open("./val_filtered.csv", "r") as f:
-    #     reader = csv.reader(f)
-    #     data = list(reader)
-    #     val_paths = data[0]
-    train_dataset = ColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
+def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pickle=True):
+    if pickle:
+        use_csv = False
+    train_paths = glob.glob(path + "/train/*")
+    val_paths = glob.glob(path + "/val/*")
+    if use_csv:
+        with open(path + "/train_filtered.csv", "r") as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            train_paths = data[0]
+        with open(path + "/val_filtered.csv", "r") as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            val_paths = data[0]
+    if pickle:
+        train_dataset = PickleColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
+        val_dataset = PickleColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
+    else:
+        train_dataset = ColorizationDataset(train_paths, split="train", config=config, size=config["img_size"], limit=limit)
+        val_dataset = ColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
+
     print(f"train size: {len(train_dataset.paths)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"])
-    val_dataset = ColorizationDataset(val_paths, split="val", config=config, size=config["img_size"], limit=limit)
     print(f"val size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)

@@ -1,6 +1,6 @@
 import torch
 from torch import nn, optim
-from loss import GANLoss
+# from loss import GANLoss
 
 
 class UnetBlock(nn.Module):
