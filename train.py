@@ -34,7 +34,7 @@ def optimize_diff(optim_diff, optim_enc, encoder, diff_gen, batch, device,
     return diff_loss;
 
 def validation_update(step, losses, model, val_dl, config, sample=True, log=True):
-    losses["val_loss"] = validation_step(model, val_dl, device, config, sample=True, log=log)
+    losses["val_loss"] = validation_step(model, val_dl, config["device"], config, sample=True, log=log)
     if log:
         wandb.log(losses)
     return (losses)
