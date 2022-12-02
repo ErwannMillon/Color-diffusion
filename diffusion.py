@@ -22,7 +22,7 @@ def forward_diffusion_sample(x_0, t, T=300):
     Takes an image and a timestep as input and 
     returns the noisy version of it
     """
-    betas = linear_beta_schedule(timesteps=T)
+    betas = linear_beta_schedule(timesteps=T).to(x_0)
 
     alphas = 1. - betas
     alphas_cumprod = torch.cumprod(alphas, axis=0)

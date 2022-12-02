@@ -8,20 +8,11 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from unet import SimpleUnet
 from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
-from diffusion import forward_diffusion_sample, linear_beta_schedule
+from diffusion import forward_diffusion_sample, get_index_from_list, linear_beta_schedule
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import wandb
 from einops import rearrange
-
-def get_index_from_list(vals, t, x_shape):
-    """ 
-    Returns a specific index t of a passed list of values vals
-    while considering the batch dimension.
-    """
-    batch_size = t.shape[0]
-    out = vals.gather(-1, t.cpu())
-    return out.reshape(batch_size, *((1,) * (len(x_shape) - 1)))
 
 @torch.no_grad()
 def sample_timestep(x, t, model, T=300):
@@ -89,7 +80,7 @@ def sample_plot_image(x_l, model, T=300, log=False):
     images += bw.unsqueeze(0)
     if len(x_l.shape) == 3:
         x_l = x_l.unsqueeze(0)
-    x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size))
+    x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size)).to(x_l)
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
     stepsize = T//num_images
