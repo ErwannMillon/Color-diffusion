@@ -98,7 +98,7 @@ class PLColorDiff(pl.LightningModule):
         num_images = 10
         stepsize = T//num_images
         for i in range(0,T)[::-1]:
-            t = torch.full((1,), i, dtype=torch.long)
+            t = torch.full((1,), i, dtype=torch.long).to(img)
             img = self.sample_timestep(img, t)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
