@@ -15,7 +15,6 @@ class PLColorDiff(pl.LightningModule):
                 img_size = 64,
                 sample=True,
                 log=True,
-                sample_fn = sample_plot_image,
                 using_cond=False,
                 **kwargs):
         super().__init__()
@@ -25,7 +24,6 @@ class PLColorDiff(pl.LightningModule):
         self.sample = sample
         self.T = T
         self.loss = torch.nn.functional.l1_loss
-        self.sample_image = sample_fn
     def forward(self, *args):
         return self.unet(args)
     def training_step(self, batch, batch_idx):
