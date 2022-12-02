@@ -26,12 +26,12 @@ def optimize_diff(optim_diff, optim_enc, encoder, diff_gen, batch, device,
     # real_L, real_AB = split_lab(batch[:1, ...].to(device))
     t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
     optim_diff.zero_grad()
-    optim_enc.zero_grad()
+    # optim_enc.zero_grad()
     diff_loss = get_loss(diff_gen,  batch, t, device)
     diff_loss.backward()
     optim_diff.step()
-    optim_enc.step()
-    return loss;
+    # optim_enc.step()
+    return diff_loss;
 
 def validation_update(step, losses, model, val_dl, config, sample=True, log=True):
     losses["val_loss"] = validation_step(model, val_dl, device, config, sample=True, log=log)
@@ -42,14 +42,15 @@ def validation_update(step, losses, model, val_dl, config, sample=True, log=True
 def train_model(diff_gen, encoder, train_dl, val_dl, epochs, config, 
                 save_interval=15, display_every=200, log=True, ckpt=None, sample=True, writer=None):
     device = config["device"]
-    test = ColorizationDataset(["./data/croppedme.jpg"], split="val")
-    me = next(iter(test))
-    me_xl, _ = split_lab(me.unsqueeze(0))
+    # test = ColorizationDataset(["./data/croppedme.jpg"], split="val")
+    # me = next(iter(test))
+    # me_xl, _ = split_lab(me.unsqueeze(0))
     if ckpt:
         diff_gen.load_state_dict(torch.load(ckpt, map_location=device))
     diff_gen.train()
     optim_diff = torch.optim.Adam(diff_gen.parameters(), lr=config["lr_unet"])
-    optim_enc = torch.optim.Adam(encoder.parameters(), lr=config["lr_enc"])
+    optim_enc = None
+    # optim_enc = torch.optim.Adam(encoder.parameters(), lr=config["lr_enc"])
     for e in range(epochs):
         for step, batch in tqdm(enumerate(train_dl)):
             diff_loss = optimize_diff(optim_diff, optim_enc, encoder, diff_gen, batch, 
