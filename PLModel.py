@@ -16,14 +16,18 @@ class PLColorDiff(pl.LightningModule):
                 sample=True,
                 log=True,
                 using_cond=False,
+                display_every=None,
                 **kwargs):
         super().__init__()
         self.unet = unet.to(self.device)
+        self.T = T
         self.lr = lr
         self.using_cond = using_cond
         self.sample = sample
-        self.T = T
         self.loss = torch.nn.functional.l1_loss
+        if sample is True and display_every is None:
+            display_every = 100
+        self.display_every = display_every
     def forward(self, *args):
         return self.unet(args)
     def training_step(self, batch, batch_idx):
@@ -40,7 +44,7 @@ class PLColorDiff(pl.LightningModule):
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
-        if self.sample:
+        if self.sample and batch_idx % self.display_every == 0:
             x_l, _ = split_lab(batch)
             self.sample_plot_image(x_l, self.T, self.log)
         self.log("val loss", val_loss)
@@ -88,6 +92,7 @@ class PLColorDiff(pl.LightningModule):
             return cat_lab(x_l, ab_t_pred)
     def sample_plot_image(self, x_l, T=300, log=False):
         images = []
+        x_l = x_l[:1]
         img_size = x_l.shape[-1]
         bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1)
         images += bw.unsqueeze(0)
