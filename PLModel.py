@@ -42,7 +42,7 @@ class PLColorDiff(pl.LightningModule):
         val_loss = self.training_step(batch, batch_idx)
         if self.sample:
             x_l, _ = split_lab(batch)
-            self.sample_image(x_l, self.unet, self.T, self.log)
+            self.sample_plot_image(x_l, self.unet, self.T, self.log)
         self.log("val loss", val_loss)
         return val_loss
     def configure_optimizers(self):
