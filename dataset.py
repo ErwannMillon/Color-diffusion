@@ -117,6 +117,8 @@ class PickleColorizationDataset(ColorizationDataset):
         return(torch.load(self.paths[idx]))
 import csv
 def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pickle=True):
+    if pickle:
+        use_csv = False
     train_paths = glob.glob(path + "/train/*")
     val_paths = glob.glob(path + "/val/*")
     if use_csv:
