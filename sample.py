@@ -1,4 +1,4 @@
-from main_model import MainModel
+
 from icecream import ic
 import torchvision
 import torch
@@ -8,20 +8,11 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from unet import SimpleUnet
 from utils import log_results, right_pad_dims_to, split_lab, update_losses, visualize, show_lab_image, cat_lab
-from main_model import forward_diffusion_sample, linear_beta_schedule
+from diffusion import forward_diffusion_sample, get_index_from_list, linear_beta_schedule
 import torch.nn.functional as F
 from matplotlib import pyplot as plt
 import wandb
 from einops import rearrange
-
-def get_index_from_list(vals, t, x_shape):
-    """ 
-    Returns a specific index t of a passed list of values vals
-    while considering the batch dimension.
-    """
-    batch_size = t.shape[0]
-    out = vals.gather(-1, t.cpu())
-    return out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
 
 @torch.no_grad()
 def sample_timestep(x, t, model, T=300):
@@ -48,7 +39,7 @@ def sample_timestep(x, t, model, T=300):
     
     # Call model (current image - noise prediction)
     # model.setup_input(x)
-    pred = model(x, t, x_l)
+    pred = model(x, t)
     beta_times_pred = betas_t * pred
     model_mean = sqrt_recip_alphas_t * (
         x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
@@ -74,7 +65,6 @@ def dynamic_threshold(img, percentile=0.8):
         percentile,
         dim=-1
     )
-
     # If threshold is less than 1, simply clamp values to [-1., 1.]
     s.clamp_(min=1.)
     s = right_pad_dims_to(img, s)
@@ -82,37 +72,23 @@ def dynamic_threshold(img, percentile=0.8):
     img = img.clamp(-s, s) / s
     return img
 
-def sample_plot_image(val_dl, model, device, x_l=None, T=300, log=False):
-    # print("hadsf")
-    # # Sample noise
-    print("sample deivce", device)
-    model.eval()
+def sample_plot_image(x_l, model, T=300, log=False):
     images = []
-    if x_l is None:
-        x = next(iter(val_dl))[:1,].to(device)
-        x_l, _ = split_lab(x) 
-        images += x.to(device).unsqueeze(0)
-        # bw = torch.cat((x_l, torch.zeros_like(x_l), torch.zeros_like(x_l)), dim=1).to(device)
-        # images += bw.unsqueeze(0)
     img_size = x_l.shape[-1]
-    x_l = x_l.to(device)
-    bw = torch.cat((x_l, *[torch.zeros_like(x_l, device=device)] * 2), dim=1).to(device)
+    bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1)
     images += bw.unsqueeze(0)
     if len(x_l.shape) == 3:
         x_l = x_l.unsqueeze(0)
-    x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size), device=device)
+    x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size)).to(x_l)
     img = torch.cat((x_l, x_ab), dim=1)
     num_images = 10
-    stepsize = int(T/num_images)
+    stepsize = T//num_images
     for i in range(0,T)[::-1]:
-        t = torch.full((1,), i, device=device, dtype=torch.long)
+        t = torch.full((1,), i, dtype=torch.long)
         img = sample_timestep(img, t, model)
-        # img = dynamic_threshold(img)
         if i % stepsize == 0:
             images += img.unsqueeze(0)
-            # show_lab_image(img.detach().cpu())
-            # show_tensor_image(img.detach().cpu())
-    grid = torchvision.utils.make_grid(torch.cat(images), dim=0)
+    grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
     show_lab_image(grid.unsqueeze(0), log=log)
     plt.show()     
 
@@ -126,7 +102,7 @@ if __name__ == "__main__":
     train_dl, val_dl = make_dataloaders("./fairface", config)
     # ckpt = "./saved_models/he_leaky_64.pt"
     # model.load_state_dict(torch.load(ckpt, map_location=device))
-    model = SimpleUnet().to(device)
+    model = SimpleUnet()
     model.eval()
     ic.disable()
     x = next(iter(val_dl))[:1,]
