@@ -136,5 +136,6 @@ class PLColorDiff(pl.LightningModule):
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
+        return images[-1]
         show_lab_image(grid.unsqueeze(0), log=self.should_log)
         plt.show()     
