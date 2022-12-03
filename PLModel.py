@@ -112,7 +112,7 @@ class PLColorDiff(pl.LightningModule):
             ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)
     @torch.no_grad()
-    def sample_plot_image(self, x_0):
+    def sample_plot_image(self, x_0, show=True):
         images = []
         if x_0.shape[1] == 3:
             x_l, _ = split_lab(x_0)
@@ -136,6 +136,7 @@ class PLColorDiff(pl.LightningModule):
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
-        return images[-1]
+        if show is False:
+            return images[-1]
         show_lab_image(grid.unsqueeze(0), log=self.should_log)
         plt.show()     
