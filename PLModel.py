@@ -5,6 +5,7 @@ from sample import dynamic_threshold, sample_plot_image
 from utils import cat_lab, show_lab_image, split_lab
 import torch.nn.functional as F
 import torchvision
+import wandb
 from matplotlib import pyplot as plt
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
@@ -14,7 +15,7 @@ class PLColorDiff(pl.LightningModule):
                 batch_size=64,
                 img_size = 64,
                 sample=True,
-                log=True,
+                should_log=True,
                 using_cond=False,
                 display_every=None,
                 **kwargs):
@@ -40,11 +41,11 @@ class PLColorDiff(pl.LightningModule):
         else:
             noise_pred = self.unet(x_noisy, t)
         loss = self.loss(noise_pred, noise) 
-        self.log("train loss", loss)
+        wandb.log("train loss", loss)
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
-        self.log("val loss", val_loss)
+        wandb.log("val loss", val_loss)
         print(batch_idx)
         if self.sample and batch_idx % self.display_every == 0:
             x_l, _ = split_lab(batch)
