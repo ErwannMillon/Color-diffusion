@@ -41,11 +41,11 @@ class PLColorDiff(pl.LightningModule):
         else:
             noise_pred = self.unet(x_noisy, t)
         loss = self.loss(noise_pred, noise) 
-        wandb.log("train loss", loss)
+        wandb.log({"train loss": loss})
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
-        wandb.log("val loss", val_loss)
+        wandb.log({"val loss": val_loss})
         print(batch_idx)
         if self.sample and batch_idx % self.display_every == 0:
             x_l, _ = split_lab(batch)
