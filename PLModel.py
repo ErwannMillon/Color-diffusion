@@ -77,7 +77,6 @@ class PLColorDiff(pl.LightningModule):
         sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
         
         # Call model (current image - noise prediction)
-        self.unet.eval()
         pred = self.unet(x, t)
         beta_times_pred = betas_t * pred
         model_mean = sqrt_recip_alphas_t * (
