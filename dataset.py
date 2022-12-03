@@ -122,11 +122,11 @@ def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pick
     train_paths = glob.glob(path + "/train/*")
     val_paths = glob.glob(path + "/val/*")
     if use_csv:
-        with open(path + "/train_filtered.csv", "r") as f:
+        with open("./train_filtered.csv", "r") as f:
             reader = csv.reader(f)
             data = list(reader)
             train_paths = data[0]
-        with open(path + "/val_filtered.csv", "r") as f:
+        with open("./val_filtered.csv", "r") as f:
             reader = csv.reader(f)
             data = list(reader)
             val_paths = data[0]
