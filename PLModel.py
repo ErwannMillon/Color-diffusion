@@ -78,7 +78,7 @@ class PLColorDiff(pl.LightningModule):
         sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
         
         # Call model (current image - noise prediction)
-        # model.setup_input(x)
+        self.unet.eval()
         pred = self.unet(x, t)
         beta_times_pred = betas_t * pred
         model_mean = sqrt_recip_alphas_t * (
@@ -96,11 +96,12 @@ class PLColorDiff(pl.LightningModule):
             return cat_lab(x_l, ab_t_pred)
     @torch.no_grad
     def sample_plot_image(self, x_0, T=300, log=False):
-        images.append(x_0[:1])
+        images = []
         x_l, _ = split_lab(x_0).to(x_0)
         x_l = x_l[:1]
         img_size = x_l.shape[-1]
         bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1)
+        images.append(x_0[:1])
         images += bw.unsqueeze(0)
         if len(x_l.shape) == 3:
             x_l = x_l.unsqueeze(0)
