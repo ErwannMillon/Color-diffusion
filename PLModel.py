@@ -14,6 +14,7 @@ class PLColorDiff(pl.LightningModule):
                 val_dl,
                 T=300,
                 lr=5e-4,
+                enc_lr=3e-4,
                 batch_size=64,
                 img_size = 64,
                 sample=True,
@@ -25,9 +26,11 @@ class PLColorDiff(pl.LightningModule):
         self.unet = unet.to(self.device)
         self.T = T
         self.lr = lr
+        self.enc_lr = enc_lr
         self.using_cond = using_cond
         self.sample = sample
         self.loss = torch.nn.functional.l1_loss
+        self.should_log=should_log
         if sample is True and display_every is None:
             display_every = 1000
         self.display_every = display_every
@@ -47,23 +50,27 @@ class PLColorDiff(pl.LightningModule):
         if self.sample and batch_idx % self.display_every == 0:
             self.test_step(batch)
         loss = self.loss(noise_pred, noise) 
-        wandb.log({"train loss": loss})
+        if self.should_log:
+            wandb.log({"train loss": loss})
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
-        wandb.log({"val loss": val_loss})
+        if self.should_log:
+            wandb.log({"val loss": val_loss})
         print(batch_idx)
         if self.sample and batch_idx % self.display_every == 0:
-            self.sample_plot_image(batch, self.T, self.log)
+            self.sample_plot_image(batch)
         return val_loss
     def test_step(self, batch, *args, **kwargs):
         x = next(iter(self.val_dl)).to(batch)
-        self.sample_plot_image(x, self.T, self.log)
+        self.sample_plot_image(x)
     def configure_optimizers(self):
-        return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
+        unet_optim = torch.optim.Adam(self.unet.parameters(), lr=self.lr)
+        return unet_optim
+
 
     @torch.no_grad()
-    def sample_timestep(self, x, t, T=300):
+    def sample_timestep(self, x, t, cond=None, T=300):
         """
         Calls the model to predict the noise in the image and returns 
         the denoised image. 
@@ -86,7 +93,10 @@ class PLColorDiff(pl.LightningModule):
         sqrt_recip_alphas_t = get_index_from_list(sqrt_recip_alphas, t, x.shape)
         
         # Call model (current image - noise prediction)
-        pred = self.unet(x, t)
+        if self.using_cond and cond:
+            pred = self.unet(x, t, cond)
+        else:
+            pred = self.unet(x, t)
         beta_times_pred = betas_t * pred
         model_mean = sqrt_recip_alphas_t * (
             x_ab - beta_times_pred / sqrt_one_minus_alphas_cumprod_t
@@ -102,7 +112,7 @@ class PLColorDiff(pl.LightningModule):
             ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)
     @torch.no_grad()
-    def sample_plot_image(self, x_0, T=300, log=False):
+    def sample_plot_image(self, x_0):
         images = []
         if x_0.shape[1] == 3:
             x_l, _ = split_lab(x_0)
@@ -119,12 +129,12 @@ class PLColorDiff(pl.LightningModule):
         x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size)).to(x_l)
         img = torch.cat((x_l, x_ab), dim=1)
         num_images = 10
-        stepsize = T//num_images
-        for i in range(0,T)[::-1]:
+        stepsize = self.T//num_images
+        for i in range(0, self.T)[::-1]:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            img = self.sample_timestep(img, t)
+            img = self.sample_timestep(img, t, self.T)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
-        show_lab_image(grid.unsqueeze(0), log=log)
+        show_lab_image(grid.unsqueeze(0), log=self.should_log)
         plt.show()     

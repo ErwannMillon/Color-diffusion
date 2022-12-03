@@ -9,6 +9,7 @@ from utils import get_device
 from pytorch_lightning.loggers import WandbLogger
 from icecream import ic
 import default_configs
+from stable_diffusion.model.unet import UNetModel
 
 if __name__ == "__main__":
     wandb.login()
