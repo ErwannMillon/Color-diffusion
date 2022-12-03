@@ -16,15 +16,16 @@ if __name__ == "__main__":
     colordiff_config = default_configs.ColorDiffConfig
     colordiff_config["device"] = "mps"
     ic.disable()
-    train_dl, val_dl = make_dataloaders("./preprocessed_fairface", colordiff_config)
+    train_dl, val_dl = make_dataloaders("./preprocessed_fairface",  colordiff_config, num_workers=4)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, **colordiff_config)
-    log = False
-    colordiff_config["log"] = log
+    log = True
+    
+    colordiff_config["should_log"] = log
     if log:
         wandb.login()
         wandb.init(project="sd_colordiff", config=colordiff_config)
-        wandb.log(unet_config)
+        wandb.config.update(unet_config)
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
                         # logger=wandb_logger, 
                         accelerator=colordiff_config["device"],
