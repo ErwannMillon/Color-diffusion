@@ -54,7 +54,7 @@ class PLColorDiff(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
 
-    @torch.no_grad
+    @torch.no_grad()
     def sample_timestep(self, x, t, T=300):
         """
         Calls the model to predict the noise in the image and returns 
@@ -94,10 +94,11 @@ class PLColorDiff(pl.LightningModule):
             ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
             ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)
-    @torch.no_grad
+    @torch.no_grad()
     def sample_plot_image(self, x_0, T=300, log=False):
         images = []
-        x_l, _ = split_lab(x_0).to(x_0)
+        x_l, _ = split_lab(x_0)
+        x_l.to(x_0)
         x_l = x_l[:1]
         img_size = x_l.shape[-1]
         bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1)
