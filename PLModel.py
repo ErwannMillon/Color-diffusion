@@ -48,8 +48,7 @@ class PLColorDiff(pl.LightningModule):
         wandb.log({"val loss": val_loss})
         print(batch_idx)
         if self.sample and batch_idx % self.display_every == 0:
-            x_l, _ = split_lab(batch)
-            self.sample_plot_image(x_l, self.T, self.log)
+            self.sample_plot_image(batch, self.T, self.log)
         return val_loss
     def configure_optimizers(self):
         return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
@@ -97,12 +96,15 @@ class PLColorDiff(pl.LightningModule):
     @torch.no_grad()
     def sample_plot_image(self, x_0, T=300, log=False):
         images = []
-        x_l, _ = split_lab(x_0)
-        x_l.to(x_0)
+        if x_0.shape[1] == 3:
+            x_l, _ = split_lab(x_0)
+            x_l.to(x_0)
+            images.append(x_0[:1])
+        else:
+            x_l = x_0
         x_l = x_l[:1]
         img_size = x_l.shape[-1]
         bw = torch.cat((x_l, *[torch.zeros_like(x_l)] * 2), dim=1)
-        images.append(x_0[:1])
         images += bw.unsqueeze(0)
         if len(x_l.shape) == 3:
             x_l = x_l.unsqueeze(0)
