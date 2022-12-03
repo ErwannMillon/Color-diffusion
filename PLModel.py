@@ -26,7 +26,7 @@ class PLColorDiff(pl.LightningModule):
         self.sample = sample
         self.loss = torch.nn.functional.l1_loss
         if sample is True and display_every is None:
-            display_every = 100
+            display_every = 1000
         self.display_every = display_every
     def forward(self, *args):
         return self.unet(args)
@@ -45,13 +45,13 @@ class PLColorDiff(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
         self.log("val loss", val_loss)
-        return val_loss
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
-    def on_validation_batch_end(self, outputs, batch, batch_idx, dl_idx):
+        print(batch_idx)
         if self.sample and batch_idx % self.display_every == 0:
             x_l, _ = split_lab(batch)
             self.sample_plot_image(x_l, self.T, self.log)
+        return val_loss
+    def configure_optimizers(self):
+        return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
 
     def sample_timestep(self, x, t, T=300):
         """
