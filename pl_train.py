@@ -17,9 +17,8 @@ if __name__ == "__main__":
     ic.disable()
     train_dl, val_dl = make_dataloaders("./preprocessed_fairface", config)
     unet = SimpleUnet()
-    model = PLColorDiff(unet, **config)
+    model = PLColorDiff(unet, train_dl, val_dl, **config)
     # wandb_logger = WandbLogger()
-    wandb.init(project="localdiffcolor")
     trainer = pl.Trainer(max_epochs=config["epochs"],
                         # logger=wandb_logger, 
                         accelerator=config["device"],

@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
                 unet, 
+                train_dl,
+                val_dl,
                 T=300,
                 lr=5e-4,
                 batch_size=64,
@@ -29,6 +31,8 @@ class PLColorDiff(pl.LightningModule):
         if sample is True and display_every is None:
             display_every = 1000
         self.display_every = display_every
+        self.val_dl = val_dl
+        self.train_dl = train_dl
     def forward(self, *args):
         return self.unet(args)
     def training_step(self, batch, batch_idx):
@@ -40,6 +44,8 @@ class PLColorDiff(pl.LightningModule):
             noise_pred = self.unet(x_noisy, t, x_l)
         else:
             noise_pred = self.unet(x_noisy, t)
+        if self.sample and batch_idx % self.display_every == 0:
+            self.test_step(batch)
         loss = self.loss(noise_pred, noise) 
         wandb.log({"train loss": loss})
         return {"loss": loss}
@@ -50,6 +56,9 @@ class PLColorDiff(pl.LightningModule):
         if self.sample and batch_idx % self.display_every == 0:
             self.sample_plot_image(batch, self.T, self.log)
         return val_loss
+    def test_step(self, batch, *args, **kwargs):
+        x = next(iter(self.val_dl)).to(batch)
+        self.sample_plot_image(x, self.T, self.log)
     def configure_optimizers(self):
         return torch.optim.Adam(self.unet.parameters(), lr=self.lr)
 
