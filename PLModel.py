@@ -7,10 +7,11 @@ from utils import cat_lab, show_lab_image, split_lab
 import torch.nn.functional as F
 import torchvision
 import wandb
+from stable_diffusion.latent_diffusion import UNetModel
 from matplotlib import pyplot as plt
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
-                unet, 
+                unet : UNetModel, 
                 train_dl,
                 val_dl,
                 T=300,
@@ -54,13 +55,13 @@ class PLColorDiff(pl.LightningModule):
         loss = self.loss(noise_pred, noise) 
         if self.should_log:
             # wandb.log({"tloss": loss})
-            self.log({"train loss": loss})
+            self.log("train loss", loss)
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
             # wandb.log({"v_loss": val_loss})
-            self.log({"val loss": val_loss})
+            self.log("val loss", val_loss)
         if self.sample and batch_idx % self.display_every == 0:
             self.sample_plot_image(batch)
         return val_loss
