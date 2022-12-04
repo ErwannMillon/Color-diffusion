@@ -54,7 +54,7 @@ class PLColorDiff(pl.LightningModule):
         loss = self.loss(noise_pred, noise) 
         if self.should_log:
             # wandb.log({"tloss": loss})
-            self.log("train loss", loss)
+            self.log("train loss", loss, on_step=True)
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
