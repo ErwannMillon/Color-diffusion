@@ -39,8 +39,7 @@ class ColorizationDataset(Dataset):
             size = config["img_size"]
         if split == 'train':
             self.transforms = transforms.Compose([
-            #    transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.45, hue=0.02),
-                transforms.RandomHorizontalFlip(),  # A little data augmentation!
+                transforms.RandomHorizontalFlip(),
                 transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
                 transforms.Resize((size, size), Image.BICUBIC)
             ])
@@ -70,7 +69,7 @@ class ColorizationDataset(Dataset):
         img = self.transforms(img)
         img = np.array(img)
         img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
-        img_lab = transforms.ToTensor()(img_lab)
+        img_lab = torch.tensor(img_lab)
         L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return (torch.cat((L, ab), dim=0))

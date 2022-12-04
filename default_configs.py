@@ -1,6 +1,8 @@
 import torch
 from sample import sample_plot_image
 from utils import get_device
+from pytorch_lightning.profiler import SimpleProfiler
+
 SimpleUnetConfig = dict (
     device = get_device(),
     pin_memory = torch.cuda.is_available(),

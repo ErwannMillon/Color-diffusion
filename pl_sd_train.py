@@ -22,12 +22,15 @@ if __name__ == "__main__":
     log = True
     
     colordiff_config["should_log"] = log
+
     if log:
-        wandb.login()
-        wandb.init(project="sd_colordiff", config=colordiff_config)
-        wandb.config.update(unet_config)
+        # wandb.login()
+        wandb_logger = WandbLogger(project="colordifflocal")
+        wandb_logger.watch(model)
+        wandb_logger.experiment.config.update(colordiff_config)
+        wandb_logger.experiment.config.update(unet_config)
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
-                        # logger=wandb_logger, 
+                        logger=wandb_logger, 
                         accelerator=colordiff_config["device"],
                         devices=1,
                         val_check_interval=colordiff_config["val_every"])

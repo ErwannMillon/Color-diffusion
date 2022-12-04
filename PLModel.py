@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 import pytorch_lightning as pl
 from diffusion import forward_diffusion_sample, get_index_from_list, linear_beta_schedule
 from sample import dynamic_threshold, sample_plot_image
@@ -36,6 +37,7 @@ class PLColorDiff(pl.LightningModule):
         self.display_every = display_every
         self.val_dl = val_dl
         self.train_dl = train_dl
+        # self.save_hyperparameters()
     def forward(self, *args):
         return self.unet(args)
     def training_step(self, batch, batch_idx):
@@ -51,13 +53,14 @@ class PLColorDiff(pl.LightningModule):
             self.test_step(batch)
         loss = self.loss(noise_pred, noise) 
         if self.should_log:
-            wandb.log({"train loss": loss})
+            # wandb.log({"tloss": loss})
+            self.log({"train loss": loss})
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
-            wandb.log({"val loss": val_loss})
-        print(batch_idx)
+            # wandb.log({"v_loss": val_loss})
+            self.log({"val loss": val_loss})
         if self.sample and batch_idx % self.display_every == 0:
             self.sample_plot_image(batch)
         return val_loss
@@ -112,7 +115,7 @@ class PLColorDiff(pl.LightningModule):
             ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)
     @torch.no_grad()
-    def sample_plot_image(self, x_0, show=True):
+    def sample_plot_image(self, x_0, show=True, prog=False):
         images = []
         if x_0.shape[1] == 3:
             x_l, _ = split_lab(x_0)
@@ -130,7 +133,8 @@ class PLColorDiff(pl.LightningModule):
         img = torch.cat((x_l, x_ab), dim=1)
         num_images = 10
         stepsize = self.T//num_images
-        for i in range(0, self.T)[::-1]:
+        counter = tqdm(range(0, self.T)[::-1]) if prog else range(0, self.T)[::-1]
+        for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
             img = self.sample_timestep(img, t, self.T)
             if i % stepsize == 0:
@@ -140,3 +144,4 @@ class PLColorDiff(pl.LightningModule):
             return images[-1]
         show_lab_image(grid.unsqueeze(0), log=self.should_log)
         plt.show()     
+        return images[-1]
