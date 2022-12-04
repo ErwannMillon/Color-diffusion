@@ -3,7 +3,6 @@ import torch
 import pytorch_lightning as pl
 from dataset import make_dataloaders
 from PLModel import PLColorDiff
-from sample import sample_plot_image
 from unet import SimpleUnet
 from utils import get_device
 from pytorch_lightning.loggers import WandbLogger
@@ -15,7 +14,7 @@ if __name__ == "__main__":
     unet_config = default_configs.StableDiffUnetConfig
     colordiff_config = default_configs.ColorDiffConfig
     colordiff_config["device"] = "mps"
-    ic.disable()
+    # ic.disable()
     train_dl, val_dl = make_dataloaders("./preprocessed_fairface",  colordiff_config, num_workers=4)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, **colordiff_config)

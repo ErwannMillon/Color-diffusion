@@ -11,7 +11,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from sample import sample_plot_image
 from utils import get_device, get_loss, log_results, print_distrib, split_lab, update_losses, visualize, show_lab_image
-from diffusion import forward_diffusion_sample
+from diffusion import forward_diff
 import torch.nn.functional as F
 import wandb
 from unet import SimpleCondUnet, SimpleUnet
@@ -27,7 +27,7 @@ def optimize_model(model, batch, device,
     batch = batch.to(device)
     x_l, _ = split_lab(batch)
     t = torch.randint(0, config["T"], (batch.shape[0],), device=device).long()
-    x_noisy, noise = forward_diffusion_sample(batch, t, device)
+    x_noisy, noise = forward_diff(batch, t, device)
     model.diff_optim.zero_grad()
     # model.enc_optim.zero_grad()
     noise_pred = model(x_noisy, t, x_l)
@@ -96,21 +96,25 @@ if __name__ == "__main__":
     #                         n_heads=2,
     #                         tf_layers=1,
     #                         d_cond=512)
-    # cond_encoder = Encoder( in_channels=1,
-    #                         channels=64,
-    #                         channel_multipliers=[1, 2, 2, 2],
-    #                         n_resnet_blocks=2,
-    #                         z_channels=256 
-    #                         )
+    cond_encoder = Encoder( in_channels=1,
+                            channels=64,
+                            channel_multipliers=[1, 2, 2, 2],
+                            n_resnet_blocks=2,
+                            z_channels=256 
+                            )
 
     print(f"using device {device}")
     # ckpt = "./saved_models/he_leaky_64.pt"
     ckpt = None
+    x = next(iter(train_dl))[0:1,]
+    x_l , _ = split_lab(x)
+    c = cond_encoder(x_l)
+    print(c.shape)
     ic.disable()
-    model = CondColorDiff(config).to(device)
-    train_model(model, train_dl, val_dl, 1,
-                ckpt=ckpt, log=log, sample=True, display_every=1,
-                save_interval=10, writer=writer, config=config)
+    # model = CondColorDiff(config).to(device)
+    # train_model(model, train_dl, val_dl, 1,
+                # ckpt=ckpt, log=log, sample=True, display_every=1,
+                # save_interval=10, writer=writer, config=config)
 ############
 # def get_loss(model, x_0, t):
 #     x_noisy, noise = forward_diffusion_sample(x_0, t, device)

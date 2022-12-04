@@ -20,6 +20,7 @@ from typing import List
 
 import numpy as np
 import torch
+from icecream import ic
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
@@ -102,7 +103,9 @@ class UNetModel(nn.Module):
         # The middle of the U-Net
         self.middle_block = TimestepEmbedSequential(
             ResBlock(channels, d_time_emb),
+            # TODO changed for only self attn
             # SpatialTransformer(channels, n_heads, tf_layers, d_cond),
+            SpatialTransformer(channels, n_heads, tf_layers, channels),
             ResBlock(channels, d_time_emb),
         )
 
@@ -171,6 +174,7 @@ class UNetModel(nn.Module):
             x = module(x, t_emb, cond)
             x_input_block.append(x)
         # Middle of the U-Net
+        ic(x.shape)
         x = self.middle_block(x, t_emb, cond)
         # Output half of the U-Net
         for module in self.output_blocks:

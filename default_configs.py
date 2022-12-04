@@ -1,5 +1,4 @@
 import torch
-from sample import sample_plot_image
 from utils import get_device
 from pytorch_lightning.profiler import SimpleProfiler
 
@@ -12,7 +11,6 @@ SimpleUnetConfig = dict (
     img_size = 64,
     sample=True,
     log=True,
-    sample_fn = sample_plot_image,
     val_every=20,
     epochs=100,
     using_cond=False
@@ -39,7 +37,6 @@ ColorDiffConfig = dict(
     img_size = 64,
     sample=True,
     should_log=False,
-    sample_fn = sample_plot_image,
     val_every=20,
     epochs=100,
     using_cond=True

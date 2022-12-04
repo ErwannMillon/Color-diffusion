@@ -14,7 +14,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from sample import sample_plot_image
 from utils import get_device, get_loss, log_results, print_distrib, split_lab, update_losses, visualize, show_lab_image
-from diffusion import forward_diffusion_sample
+from diffusion import forward_diff
 import torch.nn.functional as F
 import wandb
 from unet import SimpleCondUnet, SimpleUnet

@@ -18,7 +18,6 @@ from torchvision.utils import make_grid
 from tqdm.notebook import tqdm
 
 from dataset import ColorizationDataset, make_dataloaders
-from diffusion import forward_diffusion_sample
 from utils import lab_to_rgb, show_lab_image, split_lab, visualize
 from train import config
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -55,7 +54,7 @@ plt.show()
 exit()
 	
 t = torch.Tensor([299]).type(torch.int64)
-noised_img = forward_diffusion_sample(x, t)[0]
+noised_img = forward_diff(x, t)[0]
 print(noised_img.shape)
 noised_img = torch.nn.functional.normalize(noised_img)
 print(torch.max(noised_img))

@@ -76,8 +76,8 @@ class AverageMeter:
 
 
 def get_loss(model, x_0, t, device="cuda"):
-    from diffusion import forward_diffusion_sample
-    x_noisy, noise = forward_diffusion_sample(x_0, t, device)
+    from diffusion import forward_diff
+    x_noisy, noise = forward_diff(x_0, t, device)
     noise_pred = model(x_noisy, t)
     return torch.nn.functional.l1_loss(noise, noise_pred)
 
