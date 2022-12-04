@@ -106,7 +106,7 @@ class PLColorDiff(pl.LightningModule):
         counter = tqdm(range(0, self.T)[::-1]) if prog else range(0, self.T)[::-1]
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l)
+            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, encoder=self.encoder)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
