@@ -7,11 +7,10 @@ from utils import cat_lab, show_lab_image, split_lab
 import torch.nn.functional as F
 import torchvision
 import wandb
-from stable_diffusion.latent_diffusion import UNetModel
 from matplotlib import pyplot as plt
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
-                unet : UNetModel, 
+                unet, 
                 train_dl,
                 val_dl,
                 T=300,
