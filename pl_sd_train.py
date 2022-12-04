@@ -1,6 +1,7 @@
 import wandb
 import torch
 import pytorch_lightning as pl
+from cond_encoder import Encoder
 from dataset import make_dataloaders
 from PLModel import PLColorDiff
 from unet import SimpleUnet
@@ -17,11 +18,15 @@ if __name__ == "__main__":
     # ic.disable()
     train_dl, val_dl = make_dataloaders("./preprocessed_fairface",  colordiff_config, num_workers=4)
     unet = UNetModel(**unet_config)
-    model = PLColorDiff(unet, train_dl, val_dl, **colordiff_config)
-    log = True
-    
+    cond_encoder = Encoder( in_channels=1,
+                            channels=64,
+                            channel_multipliers=[1, 2, 2, 2],
+                            n_resnet_blocks=2,
+                            z_channels=512 
+                            )
+    model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, **colordiff_config)
+    log = False
     colordiff_config["should_log"] = log
-
     if log:
         # wandb.login()
         wandb_logger = WandbLogger(project="colordifflocal")

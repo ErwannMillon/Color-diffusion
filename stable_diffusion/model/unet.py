@@ -104,8 +104,8 @@ class UNetModel(nn.Module):
         self.middle_block = TimestepEmbedSequential(
             ResBlock(channels, d_time_emb),
             # TODO changed for only self attn
-            # SpatialTransformer(channels, n_heads, tf_layers, d_cond),
-            SpatialTransformer(channels, n_heads, tf_layers, channels),
+            SpatialTransformer(channels, n_heads, tf_layers, d_cond),
+            # SpatialTransformer(channels, n_heads, tf_layers, channels),
             ResBlock(channels, d_time_emb),
         )
 
@@ -174,7 +174,7 @@ class UNetModel(nn.Module):
             x = module(x, t_emb, cond)
             x_input_block.append(x)
         # Middle of the U-Net
-        ic(x.shape)
+        # ic(x.shape)
         x = self.middle_block(x, t_emb, cond)
         # Output half of the U-Net
         for module in self.output_blocks:

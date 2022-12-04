@@ -8,15 +8,17 @@ import torch.nn.functional as F
 import torchvision
 import wandb
 from matplotlib import pyplot as plt
+from cond_encoder import Encoder
+from icecream import ic
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
                 unet, 
                 train_dl,
                 val_dl,
-                T=300,
-                lr=5e-4,
                 encoder=None,
                 enc_lr=3e-4,
+                T=300,
+                lr=5e-4,
                 batch_size=64,
                 img_size = 64,
                 sample=True,
@@ -42,22 +44,27 @@ class PLColorDiff(pl.LightningModule):
         if encoder:
             self.encoder = encoder
         self.enc_lr = enc_lr
-    def forward(self, *args):
-        return self.unet(args)
+    def forward(self, x_noisy, t, x_l=None):
+        if self.using_cond:
+            if self.encoder and x_l is not None:
+                ic("using greyscale cond")
+                cond = self.encoder(x_l)
+            else:
+                cond = None
+            noise_pred = self.unet(x_noisy, t, cond)
+        else:
+            noise_pred = self.unet(x_noisy, t)
+        return noise_pred
     def training_step(self, batch, batch_idx):
         x_0 = batch
         x_l, _ = split_lab(batch)
         t = torch.randint(0, self.T, (batch.shape[0],)).to(x_0)
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
-        if self.using_cond:
-            noise_pred = self.unet(x_noisy, t, None)
-        else:
-            noise_pred = self.unet(x_noisy, t)
+        noise_pred = self(x_noisy, t, x_l)
         if self.sample and batch_idx % self.display_every == 0:
             self.test_step(batch)
         loss = self.loss(noise_pred, noise) 
-        if self.should_log:
-            # wandb.log({"tloss": loss})
+        if self.should_log: 
             self.log("train loss", loss, on_step=True)
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
@@ -72,13 +79,15 @@ class PLColorDiff(pl.LightningModule):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
     def configure_optimizers(self):
-        unet_optim = torch.optim.Adam(self.unet.parameters(), lr=self.lr)
-        return unet_optim
-
+        learnable_params = list(self.unet.parameters())
+        if self.encoder is not None:
+            learnable_params += list(self.encoder.parameters())
+        global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
+        return global_optim
     @torch.no_grad()
     def sample_plot_image(self, x_0, show=True, prog=False):
         images = []
-        if x_0.shape[1] == 3:
+        if x_0.shape[1] == 3: #if the image has color channels
             x_l, _ = split_lab(x_0)
             x_l.to(x_0)
             images.append(x_0[:1])
@@ -92,7 +101,7 @@ class PLColorDiff(pl.LightningModule):
             x_l = x_l.unsqueeze(0)
         x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size)).to(x_l)
         img = torch.cat((x_l, x_ab), dim=1)
-        num_images = 10
+        num_images = 12
         stepsize = self.T//num_images
         counter = tqdm(range(0, self.T)[::-1]) if prog else range(0, self.T)[::-1]
         for i in counter:

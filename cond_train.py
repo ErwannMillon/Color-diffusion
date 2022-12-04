@@ -9,9 +9,7 @@ from dataset import make_dataloaders
 from dataset import ColorizationDataset, make_dataloaders
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from sample import sample_plot_image
 from utils import get_device, get_loss, log_results, print_distrib, split_lab, update_losses, visualize, show_lab_image
-from diffusion import forward_diff
 import torch.nn.functional as F
 import wandb
 from unet import SimpleCondUnet, SimpleUnet
@@ -100,7 +98,7 @@ if __name__ == "__main__":
                             channels=64,
                             channel_multipliers=[1, 2, 2, 2],
                             n_resnet_blocks=2,
-                            z_channels=256 
+                            z_channels=512 
                             )
 
     print(f"using device {device}")
