@@ -25,7 +25,7 @@ if __name__ == "__main__":
                             z_channels=512 
                             )
     model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, **colordiff_config)
-    log = False
+    log = True
     colordiff_config["should_log"] = log
     if log:
         # wandb.login()
