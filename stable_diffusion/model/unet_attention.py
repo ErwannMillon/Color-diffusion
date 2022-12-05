@@ -68,7 +68,7 @@ class SpatialTransformer(nn.Module):
         # to `[batch_size, height * width, channels]`
         x = x.permute(0, 2, 3, 1).view(b, h * w, c)
         # Apply the transformer layers
-        cond = einops.rearrange(cond, "b c h w -> b (hw) c")
+        # cond = einops.rearrange(cond, "b c h w -> b (hw) c")
         for block in self.transformer_blocks:
             x = block(x, cond)
         # Reshape and transpose from `[batch_size, height * width, channels]`
