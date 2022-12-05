@@ -14,9 +14,11 @@ from stable_diffusion.model.unet import UNetModel
 if __name__ == "__main__":
     unet_config = default_configs.StableDiffUnetConfig
     colordiff_config = default_configs.ColorDiffConfig
-    colordiff_config["device"] = "mps"
+    # colordiff_config["device"] = "cuda" if torch.cuda.is_available() else "mps" 
+    colordiff_config["device"] = "gpu" 
     # ic.disable()
-    train_dl, val_dl = make_dataloaders("./preprocessed_fairface",  colordiff_config, num_workers=4)
+    train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
+    # exit()
     unet = UNetModel(**unet_config)
     cond_encoder = Encoder( in_channels=1,
                             channels=64,

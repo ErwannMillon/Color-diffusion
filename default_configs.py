@@ -23,7 +23,7 @@ StableDiffUnetConfig = dict(
 	attention_levels=[0, 1, 2],
 	n_res_blocks=2,
 	channel_multipliers=[2, 2, 4, 4],
-	n_heads=2,
+	n_heads=1,
 	tf_layers=1,
 	d_cond=512
 )
@@ -35,7 +35,7 @@ ColorDiffConfig = dict(
     lr=5e-4,
     batch_size=8,
     img_size = 64,
-    sample=True,
+    sample=False,
     should_log=False,
     val_every=20,
     epochs=100,
