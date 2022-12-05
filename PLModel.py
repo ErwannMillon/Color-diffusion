@@ -40,9 +40,7 @@ class PLColorDiff(pl.LightningModule):
         self.display_every = display_every
         self.val_dl = val_dl
         self.train_dl = train_dl
-        # self.save_hyperparameters()
-        if encoder:
-            self.encoder = encoder
+        self.encoder = encoder
         self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l=None):
         if self.using_cond:
