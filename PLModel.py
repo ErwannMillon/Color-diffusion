@@ -69,7 +69,7 @@ class PLColorDiff(pl.LightningModule):
         val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
             self.log("val loss", val_loss, on_step=True)
-        if self.sample and batch_idx % self.display_every == 0:
+        if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.sample_plot_image(batch)
         return val_loss
     def test_step(self, batch, *args, **kwargs):
