@@ -17,6 +17,7 @@ so that we can load the checkpoints directly.
 """
 
 from typing import Optional
+from icecream import ic
 
 import torch
 import torch.nn.functional as F
@@ -66,6 +67,7 @@ class SpatialTransformer(nn.Module):
         # to `[batch_size, height * width, channels]`
         x = x.permute(0, 2, 3, 1).view(b, h * w, c)
         # Apply the transformer layers
+        cond = cond.permute(0, 2, 3, 1).view(b, h * w, c)
         for block in self.transformer_blocks:
             x = block(x, cond)
         # Reshape and transpose from `[batch_size, height * width, channels]`
@@ -159,6 +161,7 @@ class CrossAttention(nn.Module):
             # [https://github.com/HazyResearch/flash-attention](https://github.com/HazyResearch/flash-attention)
             # and then running `python setup.py install`
             from flash_attn.flash_attention import FlashAttention
+            print("using flash attn")
             self.flash = FlashAttention()
             # Set the scale for scaled dot-product attention.
             self.flash.softmax_scale = self.scale
@@ -175,8 +178,9 @@ class CrossAttention(nn.Module):
         # If `cond` is `None` we perform self attention
         has_cond = cond is not None
         if not has_cond:
+            ic("fake cond")
             cond = x
-
+        ic(cond.shape)
         # Get query, key and value vectors
         q = self.to_q(x)
         k = self.to_k(cond)

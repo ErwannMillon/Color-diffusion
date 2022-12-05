@@ -48,10 +48,10 @@ class PLColorDiff(pl.LightningModule):
         if self.using_cond:
             if self.encoder and x_l is not None:
                 ic("using greyscale cond")
-                cond = self.encoder(x_l)
+                cond_emb = self.encoder(x_l)
             else:
-                cond = None
-            noise_pred = self.unet(x_noisy, t, cond)
+                cond_emb = None
+            noise_pred = self.unet(x_noisy, t, cond_emb)
         else:
             noise_pred = self.unet(x_noisy, t)
         return noise_pred
@@ -86,6 +86,7 @@ class PLColorDiff(pl.LightningModule):
         return global_optim
     @torch.no_grad()
     def sample_plot_image(self, x_0, show=True, prog=False):
+        ic("sampleploy")
         images = []
         if x_0.shape[1] == 3: #if the image has color channels
             x_l, _ = split_lab(x_0)
