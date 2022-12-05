@@ -64,7 +64,9 @@ class GaussianDiffusion(LightningModule):
         sqrt_recip_alphas_t = get_index_from_list(self.sqrt_recip_alphas, t, x.shape)
         # Call model (current image - noise prediction)
         if cond is not None:
-            cond_emb = encoder(cond)
+            if encoder is not None:
+                cond_emb = encoder(cond)
+            else: cond_emb = None
             pred = model(x, t, cond_emb)
         else:
             pred = model(x, t)
