@@ -68,14 +68,13 @@ class PLColorDiff(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
-            # wandb.log({"v_loss": val_loss})
             self.log("val loss", val_loss, on_step=True)
-        # if self.sample and batch_idx % self.display_every == 0:
-            # self.sample_plot_image(batch)
+        if self.sample and batch_idx % self.display_every == 0:
+            self.sample_plot_image(batch)
         return val_loss
     def test_step(self, batch, *args, **kwargs):
         x = next(iter(self.val_dl)).to(batch)
-        # self.sample_plot_image(x)
+        self.sample_plot_image(x)
     def configure_optimizers(self):
         learnable_params = list(self.unet.parameters())
         if self.encoder is not None:
@@ -84,7 +83,6 @@ class PLColorDiff(pl.LightningModule):
         return global_optim
     @torch.no_grad()
     def sample_plot_image(self, x_0, show=True, prog=False):
-        ic("sampleploy")
         images = []
         if x_0.shape[1] == 3: #if the image has color channels
             x_l, _ = split_lab(x_0)
