@@ -22,6 +22,7 @@ from icecream import ic
 import torch
 import torch.nn.functional as F
 from torch import nn
+import einops
 
 
 class SpatialTransformer(nn.Module):
@@ -67,7 +68,7 @@ class SpatialTransformer(nn.Module):
         # to `[batch_size, height * width, channels]`
         x = x.permute(0, 2, 3, 1).view(b, h * w, c)
         # Apply the transformer layers
-        cond = cond.permute(0, 2, 3, 1).view(b, h * w, c)
+        cond = einops.rearrange(cond, "b c h w -> b (h w) c")
         for block in self.transformer_blocks:
             x = block(x, cond)
         # Reshape and transpose from `[batch_size, height * width, channels]`

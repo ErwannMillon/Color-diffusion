@@ -25,7 +25,7 @@ if __name__ == "__main__":
                             z_channels=512 
                             )
     model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, **colordiff_config)
-    log = True
+    log = False
     colordiff_config["should_log"] = log
     if log:
         # wandb.login()
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         wandb_logger.experiment.config.update(colordiff_config)
         wandb_logger.experiment.config.update(unet_config)
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
-                        logger=wandb_logger, 
+                        logger=wandb_logger if log is True else None, 
                         accelerator=colordiff_config["device"],
                         devices=1,
                         val_check_interval=colordiff_config["val_every"])
