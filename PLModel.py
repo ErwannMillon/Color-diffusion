@@ -49,8 +49,6 @@ class PLColorDiff(pl.LightningModule):
                 cond_emb = self.encoder(x_l)
             else:
                 cond_emb = None
-            #TODO 
-            cond_emb = None
             noise_pred = self.unet(x_noisy, t, cond_emb)
         else:
             noise_pred = self.unet(x_noisy, t)

@@ -182,6 +182,7 @@ class CrossAttention(nn.Module):
         # If `cond` is `None` we perform self attention
         has_cond = cond is not None
         if not has_cond:
+            ic()
             ic("fake cond")
             cond = x
         # cond = x
