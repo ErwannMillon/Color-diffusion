@@ -67,6 +67,7 @@ class GaussianDiffusion(LightningModule):
             if encoder is not None:
                 cond_emb = encoder(cond)
             else: cond_emb = None
+            cond_emb = None
             pred = model(x, t, cond_emb)
         else:
             pred = model(x, t)
