@@ -112,8 +112,10 @@ class BasicTransformerBlock(nn.Module):
         :param cond: is the conditional embeddings of shape `[batch_size,  n_cond, d_cond]`
         """
         # Self attention
+        ic("self")
         x = self.attn1(self.norm1(x)) + x
         # Cross-attention with conditioning
+        ic("crpss")
         x = self.attn2(self.norm2(x), cond=cond) + x
         # Feed-forward network
         x = self.ff(self.norm3(x)) + x
