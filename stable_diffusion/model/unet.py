@@ -25,7 +25,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 
-from labml_nn.diffusion.stable_diffusion.model.unet_attention import SpatialTransformer
+from stable_diffusion.model.unet_attention import SpatialTransformer
 
 
 class UNetModel(nn.Module):
@@ -89,7 +89,9 @@ class UNetModel(nn.Module):
                 layers = [ResBlock(channels, d_time_emb, out_channels=channels_list[i])]
                 channels = channels_list[i]
                 # Add transformer
+                #TODO
                 if i in attention_levels:
+                    # d_cond = channels
                     layers.append(SpatialTransformer(channels, n_heads, tf_layers, d_cond))
                 # Add them to the input half of the U-Net and keep track of the number of channels of
                 # its output
@@ -101,6 +103,7 @@ class UNetModel(nn.Module):
                 input_block_channels.append(channels)
 
         # The middle of the U-Net
+        # d_cond = channels
         self.middle_block = TimestepEmbedSequential(
             ResBlock(channels, d_time_emb),
             # TODO changed for only self attn
@@ -122,6 +125,7 @@ class UNetModel(nn.Module):
                 channels = channels_list[i]
                 # Add transformer
                 if i in attention_levels:
+                    # d_cond = channels
                     layers.append(SpatialTransformer(channels, n_heads, tf_layers, d_cond))
                 # Up-sample at every level after last residual block
                 # except the last one.

@@ -77,13 +77,16 @@ if __name__ == "__main__":
         pin_memory = torch.cuda.is_available(),
         T = 300
     )
+    from default_configs import ColorDiffConfig
+
     writer = SummaryWriter('runs/colordiff')
     log = False
     if log: 
         wandb.init(project="DiffColor", config=config)
     # dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
     # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
-    train_dl, val_dl = make_dataloaders("./preprocessed_fairface", config)
+    config = ColorDiffConfig
+    train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", config, pickle=True, use_csv=False)
     device = get_device()
     # diff_gen = UNetModel(   in_channels=3,
     #                         out_channels=2,
@@ -109,34 +112,4 @@ if __name__ == "__main__":
     c = cond_encoder(x_l)
     print(c.shape)
     ic.disable()
-    # model = CondColorDiff(config).to(device)
-    # train_model(model, train_dl, val_dl, 1,
-                # ckpt=ckpt, log=log, sample=True, display_every=1,
-                # save_interval=10, writer=writer, config=config)
-############
-# def get_loss(model, x_0, t):
-#     x_noisy, noise = forward_diffusion_sample(x_0, t, device)
-#     noise_pred = model(x_noisy, t)
-#     return F.l1_loss(noise, noise_pred)
-
-# from torch.optim import Adam
-
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# model.to(device)
-# optimizer = Adam(model.parameters(), lr=0.001)
-# epochs = 100 # Try more!
-# T = 300
-# BATCH_SIZE = 1
-
-# for epoch in range(epochs):
-#     for step, batch in enumerate(train_dl):
-#       optimizer.zero_grad()
-
-#       t = torch.randint(0, T, (BATCH_SIZE,), device=device).long()
-#       loss = get_loss(model, batch[0], t)
-#       loss.backward()
-#       optimizer.step()
-
-#         print(f"Epoch {epoch} | step {step:03d} Loss: {loss.item()} ")
-#       if epoch % 5 == 0 and step == 0:
 #         sample_plot_image()

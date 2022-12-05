@@ -61,14 +61,17 @@ class SpatialTransformer(nn.Module):
         # For residual connection
         x_in = x
         # Normalize
-        x = self.norm(x)
         # Initial $1 \times 1$ convolution
+        x = self.norm(x)
         x = self.proj_in(x)
+        cond = einops.rearrange(cond, "b c h w -> b (h w) c")
         # Transpose and reshape from `[batch_size, channels, height, width]`
         # to `[batch_size, height * width, channels]`
         x = x.permute(0, 2, 3, 1).view(b, h * w, c)
+        ic()
+        ic(cond.shape)
+        ic(x.shape)
         # Apply the transformer layers
-        # cond = einops.rearrange(cond, "b c h w -> b (hw) c")
         for block in self.transformer_blocks:
             x = block(x, cond)
         # Reshape and transpose from `[batch_size, height * width, channels]`
@@ -181,7 +184,8 @@ class CrossAttention(nn.Module):
         if not has_cond:
             ic("fake cond")
             cond = x
-        ic(cond.shape)
+        # cond = x
+        # ic(cond.shape)
         # Get query, key and value vectors
         q = self.to_q(x)
         k = self.to_k(cond)
