@@ -1,0 +1,4 @@
+name: colordiff
+channels:
+  - conda-forge
+prefix: /opt/homebrew/Caskroom/miniforge/base/envs/colordiff
