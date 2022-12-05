@@ -187,6 +187,8 @@ class CrossAttention(nn.Module):
             ic()
             ic("fake cond")
             cond = x
+        else:
+            ic("real cond")
         # cond = x
         # ic(cond.shape)
         # Get query, key and value vectors

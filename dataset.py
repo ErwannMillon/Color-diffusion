@@ -49,30 +49,16 @@ class ColorizationDataset(Dataset):
         self.split = split
         self.size = size
         self.paths = paths[:limit]
-        # self.paths = [path for path in self.paths if not is_alt_greyscale(path)]
-
     def get_tensor_from_path(self, path):
         img = Image.open(path).convert("RGB")
         img = self.transforms(img)
         img = np.array(img)
-        img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
+        img_lab = rgb2lab(img).astype("float32")
         img_lab = transforms.ToTensor()(img_lab)
         L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return (torch.cat((L, ab), dim=0))
     def __getitem__(self, idx):
-        # img = Image.open(self.paths[idx]).convert("RGB")
-        # # while (is_greyscale(img) is True):
-        # #     idx
-        # #     self.paths.pop(idx)
-        # #     img = Image.open(self.paths[idx]).convert("RGB")
-        # img = self.transforms(img)
-        # img = np.array(img)
-        # img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
-        # img_lab = torch.tensor(img_lab)
-        # L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
-        # ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
-        # return (torch.cat((L, ab), dim=0))
         x = self.get_tensor_from_path(self.paths[idx])
         return x
     def tensor_to_lab(self, base_img_tens):
@@ -82,24 +68,6 @@ class ColorizationDataset(Dataset):
         L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return torch.cat((L, ab), dim=0)
-    def test(self, idx):
-        img = Image.open(self.paths[idx]).convert("RGB")
-        base_img_tens = self.transforms(img)
-        base_img = np.array(base_img_tens)
-        img_lab = rgb2lab(base_img).astype("float32")  # Converting RGB to L*a*b
-        img_lab = transforms.ToTensor()(img_lab)
-        L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
-        ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
-        base_lab = torch.cat((L, ab), dim=0)
-        col = transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0.6, hue=0.02)
-        blur = transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5))
-        trans_col = self.tensor_to_lab(col(base_img_tens))
-        trans_blur = self.tensor_to_lab(blur(base_img_tens))
-        trans_both = self.tensor_to_lab(col(blur(base_img_tens)))
-        return (base_lab, trans_col, trans_blur, trans_both)
-    # def preprocess_entire_dataset:
-        # for 
-        
     def get_rgb(self):
         img = Image.open(self.paths[0]).convert("RGB")
         img = self.transforms(img)
