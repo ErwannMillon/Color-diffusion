@@ -61,18 +61,20 @@ class ColorizationDataset(Dataset):
         ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
         return (torch.cat((L, ab), dim=0))
     def __getitem__(self, idx):
-        img = Image.open(self.paths[idx]).convert("RGB")
-        # while (is_greyscale(img) is True):
-        #     idx
-        #     self.paths.pop(idx)
-        #     img = Image.open(self.paths[idx]).convert("RGB")
-        img = self.transforms(img)
-        img = np.array(img)
-        img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
-        img_lab = torch.tensor(img_lab)
-        L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
-        ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
-        return (torch.cat((L, ab), dim=0))
+        # img = Image.open(self.paths[idx]).convert("RGB")
+        # # while (is_greyscale(img) is True):
+        # #     idx
+        # #     self.paths.pop(idx)
+        # #     img = Image.open(self.paths[idx]).convert("RGB")
+        # img = self.transforms(img)
+        # img = np.array(img)
+        # img_lab = rgb2lab(img).astype("float32")  # Converting RGB to L*a*b
+        # img_lab = torch.tensor(img_lab)
+        # L = img_lab[[0], ...] / 50. - 1.  # Between -1 and 1
+        # ab = img_lab[[1, 2], ...] / 110.  # Between -1 and 1
+        # return (torch.cat((L, ab), dim=0))
+        x = self.get_tensor_from_path(self.paths[idx])
+        return x
     def tensor_to_lab(self, base_img_tens):
         base_img = np.array(base_img_tens)
         img_lab = rgb2lab(base_img).astype("float32")  # Converting RGB to L*a*b
@@ -144,5 +146,10 @@ def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pick
                             num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
     return train_dl, val_dl
 if __name__ == "__main__":
-    from train import config
-    x, y = make_dataloaders('jl', config)
+    from default_configs import ColorDiffConfig
+    config = ColorDiffConfig
+    train_dl, val_dl = make_dataloaders("./fairface", config, pickle=False, use_csv=True, num_workers=4)
+    x=next(iter(train_dl))
+    y=next(iter(val_dl))
+    print(f"y.shape = {y.shape}")
+    print(f"x.shape = {x.shape}")

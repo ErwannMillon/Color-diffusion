@@ -17,7 +17,8 @@ if __name__ == "__main__":
     # colordiff_config["device"] = "cuda" if torch.cuda.is_available() else "mps" 
     colordiff_config["device"] = "gpu" 
     # ic.disable()
-    train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
+    # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
+    train_dl, val_dl = make_dataloaders("./fairface", colordiff_config, pickle=False, use_csv=True, num_workers=4)
     # exit()
     unet = UNetModel(**unet_config)
     cond_encoder = Encoder( in_channels=1,
