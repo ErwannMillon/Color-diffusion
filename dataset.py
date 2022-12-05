@@ -85,6 +85,22 @@ class PickleColorizationDataset(ColorizationDataset):
     def __getitem__(self, idx):
         return(torch.load(self.paths[idx]))
 import csv
+
+def make_dataloaders_celeba(path, config, num_workers=0, limit=None):
+    img_paths = glob.glob(path + "/*")
+    n_imgs = len(img_paths)
+    train_split = img_paths[:int(n_imgs * .9)]
+    val_split = img_paths[int(n_imgs * .9):]
+    train_dataset = ColorizationDataset(train_split, split="train", config=config, size=config["img_size"], limit=limit)
+    val_dataset = ColorizationDataset(val_split, split="val", config=config, size=config["img_size"], limit=limit)
+    print(f"train size: {len(train_split)}")
+    train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
+                            num_workers=num_workers, pin_memory=config["pin_memory"])
+    print(f"val size: {len(val_split)}")
+    val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
+                            num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
+    return train_dl, val_dl
+
 def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pickle=True):
     if pickle:
         use_csv = False

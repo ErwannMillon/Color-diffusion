@@ -1,5 +1,4 @@
 import time
-import wandb
 from icecream import ic
 
 import numpy as np
