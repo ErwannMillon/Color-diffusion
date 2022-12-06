@@ -74,6 +74,8 @@ class PLColorDiff(pl.LightningModule):
         diff_loss = self.l1(noise_pred, noise)
         if self.train_autoenc:
             rec_loss = self.l2(x_l_rec, x_l)
+        else:
+            rec_loss = 0
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(batch)
         loss =  diff_loss + self.enc_loss_coeff * rec_loss
