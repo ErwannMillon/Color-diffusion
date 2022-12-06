@@ -16,7 +16,7 @@ from unet import SimpleCondUnet, SimpleUnet
 from validation import get_val_loss, validation_step
 from stable_diffusion.model.unet import UNetModel
 import stable_diffusion
-from cond_encoder import Encoder
+from cond_encoder import Decoder, Encoder
 from CondColorDiff import CondColorDiff
 #HYPERPARAMS
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # dataset = ColorizationDataset(["./data/bars.jpg"] * config["batch_size"], config=config)
     # train_dl = DataLoader(dataset, batch_size=config["batch_size"])
     config = ColorDiffConfig
-    train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", config, pickle=True, use_csv=False)
+    # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", config, pickle=True, use_csv=False)
     device = get_device()
     # diff_gen = UNetModel(   in_channels=3,
     #                         out_channels=2,
@@ -98,18 +98,27 @@ if __name__ == "__main__":
     #                         tf_layers=1,
     #                         d_cond=512)
     cond_encoder = Encoder( in_channels=1,
-                            channels=64,
-                            channel_multipliers=[1, 2, 2, 2],
+                            channels=128,
+                            channel_multipliers=[1, 1, 2, 3],
                             n_resnet_blocks=2,
-                            z_channels=512 
+                            z_channels=256
                             )
-
+    dec = Decoder(
+        channels = 128,
+        channel_multipliers=[3, 2, 1, 1],
+        n_resnet_blocks=2,
+        out_channels=1,
+        z_channels = 256
+    )
     print(f"using device {device}")
     # ckpt = "./saved_models/he_leaky_64.pt"
     ckpt = None
-    x = next(iter(train_dl))[0:1,]
+    # x = next(iter(train_dl))[0:1,]
+    x = torch.ones((2, 3, 64, 64))
     x_l , _ = split_lab(x)
     c = cond_encoder(x_l)
     print(c.shape)
+    d = dec(c)
+    print(d.shape)
     ic.disable()
 #         sample_plot_image()

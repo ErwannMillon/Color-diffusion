@@ -1,7 +1,7 @@
 import wandb
 import torch
 import pytorch_lightning as pl
-from cond_encoder import Encoder
+from cond_encoder import Decoder, Encoder
 from dataset import make_dataloaders
 from PLModel import PLColorDiff
 from unet import SimpleUnet
@@ -27,7 +27,14 @@ if __name__ == "__main__":
                             n_resnet_blocks=2,
                             z_channels=512 
                             )
-    model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, **colordiff_config)
+    dec = Decoder(
+        channels = 128,
+        channel_multipliers=[3, 2, 1, 1],
+        n_resnet_blocks=2,
+        out_channels=1,
+        z_channels = 256
+    )
+    model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, decoder=dec, **colordiff_config)
     log = False
     colordiff_config["should_log"] = log
     if log:

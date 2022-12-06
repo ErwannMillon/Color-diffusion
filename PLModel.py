@@ -22,6 +22,7 @@ class PLColorDiff(pl.LightningModule):
                 batch_size=64,
                 img_size = 64,
                 sample=True,
+                decoder=None,
                 should_log=True,
                 using_cond=False,
                 display_every=None,
@@ -33,7 +34,8 @@ class PLColorDiff(pl.LightningModule):
         self.using_cond = using_cond
         self.sample = sample
         self.diffusion = GaussianDiffusion(T)
-        self.loss = torch.nn.functional.l1_loss
+        self.l1 = torch.nn.functional.l1_loss
+        self.l2 = torch.nn.functional.mse_loss
         self.should_log=should_log
         if sample is True and display_every is None:
             display_every = 1000
@@ -41,8 +43,9 @@ class PLColorDiff(pl.LightningModule):
         self.val_dl = val_dl
         self.train_dl = train_dl
         self.encoder = encoder
+        self.decoder = decoder
         self.enc_lr = enc_lr
-    def forward(self, x_noisy, t, x_l=None):
+    def forward(self, x_noisy, t, x_l):
         if self.using_cond:
             if self.encoder and x_l is not None:
                 ic("using greyscale cond")
@@ -50,18 +53,19 @@ class PLColorDiff(pl.LightningModule):
             else:
                 cond_emb = None
             noise_pred = self.unet(x_noisy, t, cond_emb)
+            x_l_rec = self.decoder(cond_emb)
         else:
             noise_pred = self.unet(x_noisy, t)
-        return noise_pred
+        return noise_pred, x_l_rec
     def training_step(self, batch, batch_idx):
         x_0 = batch
         x_l, _ = split_lab(batch)
         t = torch.randint(0, self.T, (batch.shape[0],)).to(x_0)
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
-        noise_pred = self(x_noisy, t, x_l)
+        noise_pred, x_l_rec = self(x_noisy, t, x_l)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(batch)
-        loss = self.loss(noise_pred, noise) 
+        loss = self.l1(noise_pred, noise) + self.l2(x_l_rec, x_l)
         if self.should_log: 
             self.log("train loss", loss, on_step=True)
         return {"loss": loss}
