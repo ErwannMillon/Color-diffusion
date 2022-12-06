@@ -20,7 +20,7 @@ def get_index_from_list(vals, t, x_shape):
     out = vals.gather(-1, t.long())
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1)))
 class GaussianDiffusion(LightningModule):
-    def __init__(self, T) -> None:
+    def __init__(self, T, dynamic_threshold=True) -> None:
         super().__init__()
         self.betas = linear_beta_schedule(timesteps=T).to(self.device)
         self.alphas = 1. - self.betas
@@ -76,10 +76,12 @@ class GaussianDiffusion(LightningModule):
         )
         posterior_variance_t = get_index_from_list(self.posterior_variance, t, x.shape)
         if t == 0:
-            model_mean = dynamic_threshold(model_mean)
+            if self.dynamic_threshold:
+                model_mean = dynamic_threshold(model_mean)
             return cat_lab(x_l, model_mean)
         else:
             noise = torch.randn_like(x_ab)
             ab_t_pred = model_mean + torch.sqrt(posterior_variance_t) * noise 
-            ab_t_pred = dynamic_threshold(ab_t_pred)
+            if self.dynamic_threshold:
+                ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)

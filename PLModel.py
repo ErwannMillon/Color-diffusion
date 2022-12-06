@@ -26,6 +26,7 @@ class PLColorDiff(pl.LightningModule):
                 should_log=True,
                 using_cond=False,
                 display_every=None,
+                dynamic_threshold=True,
                 **kwargs):
         super().__init__()
         self.unet = unet.to(self.device)
@@ -33,7 +34,7 @@ class PLColorDiff(pl.LightningModule):
         self.lr = lr
         self.using_cond = using_cond
         self.sample = sample
-        self.diffusion = GaussianDiffusion(T)
+        self.diffusion = GaussianDiffusion(T, dynamic_threshold=dynamic_threshold)
         self.l1 = torch.nn.functional.l1_loss
         self.l2 = torch.nn.functional.mse_loss
         self.should_log=should_log
@@ -64,11 +65,14 @@ class PLColorDiff(pl.LightningModule):
         t = torch.randint(0, self.T, (batch.shape[0],)).to(x_0)
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
         noise_pred, x_l_rec = self(x_noisy, t, x_l)
+        diff_loss = self.l1(noise_pred, noise)
+        rec_loss = self.l2(x_l_rec, x_l)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(batch)
-        loss = self.l1(noise_pred, noise) \
-                + self.enc_loss_coeff * self.l2(x_l_rec, x_l)
+        loss =  diff_loss + self.enc_loss_coeff * rec_loss
         if self.should_log: 
+            self.log("rec loss", rec_loss)
+            self.log("diff loss", diff_loss)
             self.log("train loss", loss, on_step=True)
         return {"loss": loss}
     def validation_step(self, batch, batch_idx):
