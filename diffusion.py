@@ -30,6 +30,7 @@ class GaussianDiffusion(LightningModule):
         self.sqrt_alphas_cumprod = torch.sqrt(self.alphas_cumprod)
         self.sqrt_one_minus_alphas_cumprod = torch.sqrt(1. - self.alphas_cumprod)
         self.posterior_variance = self.betas * (1. - self.alphas_cumprod_prev) / (1. - self.alphas_cumprod)
+        self.dynamic_threshold=dynamic_threshold
     def forward_diff(self, x_0, t, T=300):
 
         """ 
