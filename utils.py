@@ -21,13 +21,13 @@ def split_lab(image):
 		ab = image[:, 1:,]	
 	return (l, ab)
 
-def show_lab_image(image, stepsize=10, log=True):
+def show_lab_image(image, stepsize=10, log=True,caption="diff samples"):
     # image = torch.nn.functional.normalize(image)
     # image = torch.clamp(image, -1, 1)
     plt.figure(figsize=(20, 9))
     rgb_imgs = lab_to_rgb(*split_lab(image))
     if log:
-        images = wandb.Image(rgb_imgs, caption=f"x_0 to x_300 in steps of {stepsize}")
+        images = wandb.Image(rgb_imgs, caption=caption)
         wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
     plt.show()

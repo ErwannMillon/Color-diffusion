@@ -54,14 +54,11 @@ class GreyscaleAutoEnc(pl.LightningModule):
         if self.should_log:
             loss = self.mse(rec, x_l)
             self.log("val loss", loss, on_step=True)
-        plt.figure(figsize=(20, 20))
+        plt.figure(figsize=(8, 8))
         ab = torch.zeros((1, 2, x.shape[-1], x.shape[-1])).to(x)
         images = [torch.cat((x_l, ab), dim=1), torch.cat((rec, ab), dim=1)]
-        # rgb_ground_truth = lab_to_rgb(x_l, ab)
-        # rgb_rec = lab_to_rgb(rec, ab)
-        # images=[rgb_ground_truth, rgb_rec]
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
-        show_lab_image(grid.unsqueeze(0), log=self.should_log)
+        show_lab_image(grid.unsqueeze(0), log=self.should_log, caption="autoenc samples")
         plt.show()
     def validation_step(self, batch, batch_idx):
         loss = self.training_step(batch, batch_idx)

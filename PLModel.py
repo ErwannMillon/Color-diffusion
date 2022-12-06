@@ -16,7 +16,7 @@ class PLColorDiff(pl.LightningModule):
                 train_dl,
                 val_dl,
                 autoencoder,
-                enc_loss_coeff=.7,
+                enc_loss_coeff=.5,
                 enc_lr=3e-4,
                 T=300,
                 lr=5e-4,
@@ -47,7 +47,7 @@ class PLColorDiff(pl.LightningModule):
         # self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l):
         if self.using_cond:
-            if self.encoder and x_l is not None:
+            if x_l is not None:
                 ic("using greyscale cond")
                 cond_emb = self.autoenc.encoder(x_l)
             else:
@@ -107,7 +107,7 @@ class PLColorDiff(pl.LightningModule):
         counter = tqdm(range(0, self.T)[::-1]) if prog else range(0, self.T)[::-1]
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, encoder=self.encoder)
+            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, encoder=self.autoenc.encoder)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
