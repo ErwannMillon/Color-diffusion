@@ -26,6 +26,7 @@ class PLColorDiff(pl.LightningModule):
                 should_log=True,
                 using_cond=False,
                 display_every=None,
+                train_autoenc=False,
                 dynamic_threshold=True,
                 **kwargs):
         super().__init__()
@@ -44,6 +45,9 @@ class PLColorDiff(pl.LightningModule):
         self.val_dl = val_dl
         self.train_dl = train_dl
         self.autoenc = autoencoder
+        self.train_autoenc = train_autoenc
+        if train_autoenc is False:
+            del self.autoenc.decoder
         self.enc_loss_coeff = enc_loss_coeff
         # self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l):
@@ -54,8 +58,10 @@ class PLColorDiff(pl.LightningModule):
             else:
                 cond_emb = None
             noise_pred = self.unet(x_noisy, t, cond_emb)
-            if cond_emb is not None:
+            if cond_emb is not None and self.train_autoenc:
                 x_l_rec = self.autoenc.decoder(cond_emb)
+            else:
+                x_l_rec = None
         else:
             noise_pred = self.unet(x_noisy, t)
         return noise_pred, x_l_rec
@@ -66,7 +72,8 @@ class PLColorDiff(pl.LightningModule):
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
         noise_pred, x_l_rec = self(x_noisy, t, x_l)
         diff_loss = self.l1(noise_pred, noise)
-        rec_loss = self.l2(x_l_rec, x_l)
+        if self.train_autoenc:
+            rec_loss = self.l2(x_l_rec, x_l)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(batch)
         loss =  diff_loss + self.enc_loss_coeff * rec_loss
