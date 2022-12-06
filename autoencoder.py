@@ -51,6 +51,9 @@ class GreyscaleAutoEnc(pl.LightningModule):
         x = x[:1,]
         x_l, _ = split_lab(x)
         rec = self(x.to(batch))
+        if self.should_log:
+            loss = self.mse(rec, x_l)
+            self.log("val loss", loss, on_step=True)
         plt.figure(figsize=(20, 20))
         ab = torch.zeros((1, 2, x.shape[-1], x.shape[-1])).to(x)
         images = [torch.cat((x_l, ab), dim=1), torch.cat((rec, ab), dim=1)]
