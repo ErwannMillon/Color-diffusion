@@ -49,6 +49,7 @@ class PLColorDiff(pl.LightningModule):
         if train_autoenc is False:
             del self.autoenc.decoder
         self.enc_loss_coeff = enc_loss_coeff
+        self.save_hyperparameters()
         # self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l):
         if self.using_cond:

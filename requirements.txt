@@ -14,3 +14,4 @@ torchinfo
 torchvision
 tqdm
 tensorboard
+wandb
