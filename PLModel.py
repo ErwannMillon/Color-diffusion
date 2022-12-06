@@ -71,7 +71,7 @@ class PLColorDiff(pl.LightningModule):
         t = torch.randint(0, self.T, (batch.shape[0],)).to(x_0)
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
         noise_pred, x_l_rec = self(x_noisy, t, x_l)
-        diff_loss = self.l1(noise_pred, noise)
+        diff_loss = self.l2(noise_pred, noise)
         if self.train_autoenc:
             rec_loss = self.l2(x_l_rec, x_l)
         else:
