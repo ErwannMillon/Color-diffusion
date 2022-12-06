@@ -3,7 +3,7 @@ from tqdm import tqdm
 import pytorch_lightning as pl
 from diffusion import GaussianDiffusion
 from sample import dynamic_threshold
-from utils import cat_lab, show_lab_image, split_lab
+from utils import cat_lab, lab_to_rgb, show_lab_image, split_lab
 import torch.nn.functional as F
 import torchvision
 import wandb
@@ -86,7 +86,8 @@ class PLColorDiff(pl.LightningModule):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
     def configure_optimizers(self):
-        learnable_params = list(self.unet.parameters()) + list(self.autoenc.parameters())
+        # learnable_params = list(self.unet.parameters()) + list(self.autoenc.parameters())
+        learnable_params = self.unet.parameters() 
         global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
         return global_optim
     @torch.no_grad()
@@ -118,5 +119,7 @@ class PLColorDiff(pl.LightningModule):
         if show is False:
             return images[-1]
         show_lab_image(grid.unsqueeze(0), log=self.should_log)
+        ic("range of last img")
+        _ = lab_to_rgb(*split_lab(images[-1]))
         plt.show()     
         return images[-1]

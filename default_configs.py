@@ -29,12 +29,13 @@ StableDiffUnetConfig = dict(
 	in_channels=3,
 	out_channels=2,
 	channels=128,
-	attention_levels=[0, 1, 2],
+	attention_levels=[1, 2],
 	n_res_blocks=2,
-	channel_multipliers=[2, 2, 4, 4],
+	# channel_multipliers=[1, 2, 2, 3],
+	channel_multipliers=[1, 1, 2],
 	n_heads=1,
 	tf_layers=1,
-	d_cond=512
+	d_cond=256
 )
 
 ColorDiffConfig = dict(
@@ -42,7 +43,7 @@ ColorDiffConfig = dict(
     pin_memory = torch.cuda.is_available(),
     T=300,
     lr=5e-4,
-    batch_size=8,
+    batch_size=1,
     img_size = 64,
     sample=False,
     should_log=False,

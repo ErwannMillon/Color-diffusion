@@ -10,31 +10,22 @@ from pytorch_lightning.loggers import WandbLogger
 from icecream import ic
 import default_configs
 from stable_diffusion.model.unet import UNetModel
+from autoencoder import GreyscaleAutoEnc
 
 if __name__ == "__main__":
     unet_config = default_configs.StableDiffUnetConfig
+    enc_config = default_configs.encoder_conf
     colordiff_config = default_configs.ColorDiffConfig
     # colordiff_config["device"] = "cuda" if torch.cuda.is_available() else "mps" 
-    colordiff_config["device"] = "gpu" 
+    colordiff_config["device"] = "mps" 
+    # colordiff_config["device"] = "gpu" 
     # ic.disable()
     # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
     train_dl, val_dl = make_dataloaders("./fairface", colordiff_config, pickle=False, use_csv=True, num_workers=4)
     # exit()
+    autoenc = GreyscaleAutoEnc(enc_config, val_dl)
     unet = UNetModel(**unet_config)
-    cond_encoder = Encoder( in_channels=1,
-                            channels=64,
-                            channel_multipliers=[1, 2, 2, 2],
-                            n_resnet_blocks=2,
-                            z_channels=512 
-                            )
-    dec = Decoder(
-        channels = 128,
-        channel_multipliers=[3, 2, 1, 1],
-        n_resnet_blocks=2,
-        out_channels=1,
-        z_channels = 256
-    )
-    model = PLColorDiff(unet, train_dl, val_dl, encoder=cond_encoder, decoder=dec, **colordiff_config)
+    model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
     log = False
     colordiff_config["should_log"] = log
     if log:
