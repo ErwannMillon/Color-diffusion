@@ -15,14 +15,14 @@ class PLColorDiff(pl.LightningModule):
                 unet, 
                 train_dl,
                 val_dl,
-                encoder=None,
+                autoencoder,
+                enc_loss_coeff=.7,
                 enc_lr=3e-4,
                 T=300,
                 lr=5e-4,
                 batch_size=64,
                 img_size = 64,
                 sample=True,
-                decoder=None,
                 should_log=True,
                 using_cond=False,
                 display_every=None,
@@ -42,18 +42,19 @@ class PLColorDiff(pl.LightningModule):
         self.display_every = display_every
         self.val_dl = val_dl
         self.train_dl = train_dl
-        self.encoder = encoder
-        self.decoder = decoder
-        self.enc_lr = enc_lr
+        self.autoenc = autoencoder
+        self.enc_loss_coeff = enc_loss_coeff
+        # self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l):
         if self.using_cond:
             if self.encoder and x_l is not None:
                 ic("using greyscale cond")
-                cond_emb = self.encoder(x_l)
+                cond_emb = self.autoenc.encoder(x_l)
             else:
                 cond_emb = None
             noise_pred = self.unet(x_noisy, t, cond_emb)
-            x_l_rec = self.decoder(cond_emb)
+            if cond_emb:
+                x_l_rec = self.autoenc.decoder(cond_emb)
         else:
             noise_pred = self.unet(x_noisy, t)
         return noise_pred, x_l_rec
@@ -65,7 +66,8 @@ class PLColorDiff(pl.LightningModule):
         noise_pred, x_l_rec = self(x_noisy, t, x_l)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(batch)
-        loss = self.l1(noise_pred, noise) + self.l2(x_l_rec, x_l)
+        loss = self.l1(noise_pred, noise) \
+                + self.enc_loss_coeff * self.l2(x_l_rec, x_l)
         if self.should_log: 
             self.log("train loss", loss, on_step=True)
         return {"loss": loss}
@@ -80,9 +82,7 @@ class PLColorDiff(pl.LightningModule):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
     def configure_optimizers(self):
-        learnable_params = list(self.unet.parameters())
-        if self.encoder is not None:
-            learnable_params += list(self.encoder.parameters())
+        learnable_params = list(self.unet.parameters()) + list(self.autoenc.parameters())
         global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
         return global_optim
     @torch.no_grad()

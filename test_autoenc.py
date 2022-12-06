@@ -31,15 +31,17 @@ if __name__ == "__main__":
         n_resnet_blocks=2,
         z_channels=256
     )
-    train_dl, val_dl = make_dataloaders("./fairface", colordiff_config, pickle=False, use_csv=True, num_workers=4)
     colordiff_config = default_configs.ColorDiffConfig
-    log = True
+    colordiff_config["device"] = "mps"
+    train_dl, val_dl = make_dataloaders("./fairface", colordiff_config, pickle=False, use_csv=True, num_workers=4)
+    log = False
     if log:
         wandb_logger = WandbLogger(project="autoencpretrain")
         wandb_logger.experiment.config.update(encoder_conf)
     autoenc = GreyscaleAutoEnc(encoder_conf,
                                 val_dl,
-                                display_every=20)
+                                display_every=20,
+                                should_log=False)
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
                     logger=wandb_logger if log is True else None, 
                     accelerator=colordiff_config["device"],
