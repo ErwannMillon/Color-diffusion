@@ -41,7 +41,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
         rec = self(batch)
         loss = self.mse(rec, x_l)
         if self.should_log:
-            self.log("train loss", loss)
+            self.log("train loss", loss, on_step=True)
         if batch_idx % self.display_every == 0:
             self.test_step(batch)
         return loss
