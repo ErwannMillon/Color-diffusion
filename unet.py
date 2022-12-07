@@ -27,16 +27,16 @@ class Block(nn.Module):
         
     def forward(self, x, t, ):
         # First Conv
-        # ic()
+        # # ic()
         # print_distrib(x)
         h = self.conv1(x)
-        # ic()
+        # # ic()
         # print_distrib(h)
         h = self.relu(h)
-        # ic()
+        # # ic()
         # print_distrib(h)
         h = self.bnorm1(h)
-        # ic()
+        # # ic()
         # print_distrib(h)
         # h = self.bnorm1(self.tanh(self.conv1(x)))
         # Time embedding
@@ -45,17 +45,17 @@ class Block(nn.Module):
         time_emb = time_emb[(..., ) + (None, ) * 2]
         # Add time channel
         h = h + time_emb
-        # ic()
+        # # ic()
         # print_distrib(h)
         # Second Conv
         h = self.conv2(h)
-        # ic()
+        # # ic()
         # print_distrib(h)
         h = self.relu(h)
-        # ic()
+        # # ic()
         # print_distrib(h)
         h = self.bnorm2(h)
-        # ic()
+        # # ic()
         # print_distrib(h)
         # h = self.bnorm2(self.tanh(self.conv2(h)))
         # Down or Upsample
@@ -139,13 +139,13 @@ class SimpleUnet(nn.Module):
         x = self.conv0(x)
         # Unet
         # print("tst", x.shape)
-        # ic()
+        # # ic()
         # print_distrib(x)
         residual_inputs = []
         for down in self.downs:
             x = down(x, t)
             # print("tst", x.shape)
-            # ic()
+            # # ic()
             # print_distrib(x)
             residual_inputs.append(x)
         for up in self.ups:
@@ -153,11 +153,11 @@ class SimpleUnet(nn.Module):
             # Add residual x as additional channels
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t)
-            # ic()
+            # # ic()
             # print_distrib(x)
             # print("tst", x.shape)
         output = self.output(x)
-        ic()
+        # ic()
         # print_distrib(x, "output")
         # print(f"output.shape = {output.shape}")
         return output

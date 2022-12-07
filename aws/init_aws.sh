@@ -12,6 +12,7 @@ sudo yum install zsh
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 echo 'alias python=python3'>> ~/.zshrc
 echo 'alias pip=pip3'>> ~/.zshrc
+source ~/.vimrc
 git clone https://github.com/ErwannMillon/dotfiles.git
 cat dotfiles/vimrc >> ~/.vimrc
 pip3 install -r requirements.txt
