@@ -8,6 +8,9 @@ from torch import nn
 import wandb
 import torch.nn.functional as F
 import torch
+def freeze_module(module):
+    for param in module.parameters():
+      param.requires_grad = False
 def get_device():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -27,6 +30,7 @@ def show_lab_image(image, stepsize=10, log=True,caption="diff samples"):
     plt.figure(figsize=(20, 9))
     rgb_imgs = lab_to_rgb(*split_lab(image))
     if log:
+        ic("logging image")
         images = wandb.Image(rgb_imgs, caption=caption)
         wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
