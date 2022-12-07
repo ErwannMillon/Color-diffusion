@@ -29,7 +29,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
         self.should_log = should_log
         self.val_dl = val_dl
         self.decoder = Decoder(**decoder_config)
-        self.mse = torch.nn.functional.mse_loss
+        self.loss = torch.nn.functional.l1_loss
     def forward(self, x):
         x_l, _ = split_lab(x)
         x_l = x_l.to(x)
@@ -39,7 +39,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x_l, _ = split_lab(batch)
         rec = self(batch)
-        loss = self.mse(rec, x_l)
+        loss = self.loss(rec, x_l)
         if self.should_log:
             self.log("train loss", loss, on_step=True)
         if batch_idx % self.display_every == 0:
@@ -52,7 +52,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
         x_l, _ = split_lab(x)
         rec = self(x.to(batch))
         if self.should_log:
-            loss = self.mse(rec, x_l)
+            loss = self.loss(rec, x_l)
             self.log("val loss", loss, on_step=True)
         # plt.figure(figsize=(8, 8))
         ab = torch.zeros((1, 2, x.shape[-1], x.shape[-1])).to(x)

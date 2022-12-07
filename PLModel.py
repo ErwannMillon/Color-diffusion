@@ -84,7 +84,7 @@ class PLColorDiff(pl.LightningModule):
         diff_loss = self.l2(noise_pred, noise)
         train_loss = diff_loss
         if self.train_autoenc:
-            rec_loss = self.l2(x_l_rec, x_l)
+            rec_loss = 1.3 * self.l1(x_l_rec, x_l) + self.l2(x_l_rec)
             train_loss += self.enc_loss_coeff * rec_loss
         return {"train loss": train_loss,
                 "rec loss": rec_loss,
@@ -96,7 +96,7 @@ class PLColorDiff(pl.LightningModule):
         self.log_dict(losses, on_step=True)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(x_0)
-        if batch_idx > 4 and self.autoenc_frozen is False:
+        if batch_idx > 250 and self.autoenc_frozen is False:
             print ("freezing autoencoder")
             freeze_module(self.autoenc)
             torch.save(self.autoenc.state_dict(), "./earlystopppdistp_ae.pt")
@@ -115,7 +115,9 @@ class PLColorDiff(pl.LightningModule):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
     def configure_optimizers(self):
-        learnable_params = list(self.unet.parameters()) + list(self.autoenc.parameters())
+        learnable_params = list(self.unet.parameters())
+        if self.train_autoenc:
+            learnable_params += list(self.autoenc.parameters())
         # learnable_params = self.unet.parameters() 
         global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
         return global_optim

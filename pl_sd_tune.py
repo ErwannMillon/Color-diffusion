@@ -29,7 +29,7 @@ unet_config = dict(
     n_res_blocks=2,
     channel_multipliers=[1, 2, 2, 3],
     # channe
-    n_heads=2,
+    n_heads=1,
     tf_layers=1,
     d_cond=256
 )
@@ -38,17 +38,16 @@ colordiff_config = dict(
     device = "gpu",
     pin_memory = True,
     T=350,
-    lr=6.8e-5,
+    lr=2e-5,
     batch_size=2,
     img_size = 128,
     sample=True,
     should_log=True,
-    epochs=1,
+    epochs=4,
     using_cond=True,
     display_every=200,
     dynamic_threshold=False,
-    train_autoenc=True,
-    enc_loss_coeff = 1.5,
+    train_autoenc=False,
 ) 
 
 if __name__ == "__main__":
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
     # ic.disable()
     # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
-    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=2, limit=15000)
+    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=4)
     log = True
     # exit()
     colordiff_config["should_log"] = True
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     autoenc = GreyscaleAutoEnc.load_from_checkpoint("2000.ckpt",  
                                             encoder_config=encoder_conf,
                                             val_dl=val_dl,
-                                            display_every=50,
+                                            display_every=150,
                                             should_log=False)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
@@ -82,18 +81,15 @@ if __name__ == "__main__":
         # wandb_logger.watch(model)
         wandb_logger.experiment.config.update(colordiff_config)
         wandb_logger.experiment.config.update(unet_config)
-    from pytorch_lightning.profiler import AdvancedProfiler
-    profiler = AdvancedProfiler(dirpath="./", filename="profilee")
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
                         logger=wandb_logger if log is True else None, 
                         accelerator=colordiff_config["device"],
                         num_sanity_val_steps=1,
                         default_root_dir="./saved_models",
-                        devices= "auto",
-                        log_every_n_steps=1,
-                        callbacks=[ckpt_callback],
+                        devices=[1],
+                        log_every_n_steps=4,
                         profiler="simple",
                         accumulate_grad_batches=8,
-                        # auto_lr_find=True,
+                        auto_lr_find=True,
                         )
-    trainer.fit(model, train_dl, val_dl)
+    trainer.tune(model, train_dl, val_dl)
