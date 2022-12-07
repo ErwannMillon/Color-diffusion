@@ -13,12 +13,13 @@ from stable_diffusion.model.unet import UNetModel
 from autoencoder import GreyscaleAutoEnc
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+
 encoder_conf = dict(
-  in_channels=1,
-  channels=64,
-  channel_multipliers=[1, 2, 3],
-  n_resnet_blocks=2,
-  z_channels=256
+    in_channels=1,
+    channels=64,
+    channel_multipliers=[1, 1, 2, 3],
+    n_resnet_blocks=2,
+    z_channels=256
 )
 
 unet_config = dict(
@@ -27,9 +28,9 @@ unet_config = dict(
     channels=128,
     attention_levels=[1],
     n_res_blocks=2,
-    channel_multipliers=[1, 2, 2, 3],
+    channel_multipliers=[1, 2, 2, 3, 3],
     # channe
-    n_heads=1,
+    n_heads=2,
     tf_layers=1,
     d_cond=256
 )
@@ -38,16 +39,17 @@ colordiff_config = dict(
     device = "gpu",
     pin_memory = True,
     T=350,
-    lr=2e-5,
-    batch_size=2,
+    lr=2e-4,
+    batch_size=6,
     img_size = 128,
     sample=True,
     should_log=True,
-    epochs=4,
+    epochs=3,
     using_cond=True,
     display_every=200,
     dynamic_threshold=False,
-    train_autoenc=False,
+    train_autoenc=True,
+    enc_loss_coeff = 1.5,
 ) 
 
 if __name__ == "__main__":
@@ -58,12 +60,12 @@ if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
     # ic.disable()
     # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
-    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=4)
+    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=4, limit=20000)
     log = True
     # exit()
     colordiff_config["should_log"] = True
     colordiff_config["sample"] = True
-    autoenc = GreyscaleAutoEnc.load_from_checkpoint("2000.ckpt",  
+    autoenc = GreyscaleAutoEnc.load_from_checkpoint("800ae.ckpt",  
                                             encoder_config=encoder_conf,
                                             val_dl=val_dl,
                                             display_every=150,
@@ -73,8 +75,6 @@ if __name__ == "__main__":
     colordiff_config["should_log"] = log
     ic.disable()
     ckpt_callback = ModelCheckpoint(every_n_train_steps=190,
-                                dirpath="./saved_models",
-                                filename="{epoch} {step} {train loss}"
                                 )
     if log:
         wandb_logger = WandbLogger(project="colordifflocal")
@@ -85,11 +85,10 @@ if __name__ == "__main__":
                         logger=wandb_logger if log is True else None, 
                         accelerator=colordiff_config["device"],
                         num_sanity_val_steps=1,
-                        default_root_dir="./saved_models",
-                        devices=[1],
+                        devices="auto",
                         log_every_n_steps=4,
                         profiler="simple",
-                        accumulate_grad_batches=8,
+                        accumulate_grad_batches=2,
                         auto_lr_find=True,
                         )
     trainer.tune(model, train_dl, val_dl)

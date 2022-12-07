@@ -30,6 +30,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
         self.val_dl = val_dl
         self.decoder = Decoder(**decoder_config)
         self.loss = torch.nn.functional.l1_loss
+        self.save_hyperparameters()
     def forward(self, x):
         x_l, _ = split_lab(x)
         x_l = x_l.to(x)
