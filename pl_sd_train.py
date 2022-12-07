@@ -26,7 +26,7 @@ if __name__ == "__main__":
     autoenc = GreyscaleAutoEnc(enc_config, val_dl)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
-    log = False
+    log = True
     colordiff_config["should_log"] = log
     if log:
         # wandb.login()
