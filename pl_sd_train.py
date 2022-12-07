@@ -72,6 +72,10 @@ if __name__ == "__main__":
                                             should_log=False)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
+<<<<<<< Updated upstream
+=======
+    log = False
+>>>>>>> Stashed changes
     colordiff_config["should_log"] = log
     ic.disable()
     ckpt_callback = ModelCheckpoint(every_n_train_steps=400)
