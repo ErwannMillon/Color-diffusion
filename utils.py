@@ -29,10 +29,6 @@ def show_lab_image(image, stepsize=10, log=True,caption="diff samples"):
     # image = torch.clamp(image, -1, 1)
     plt.figure(figsize=(20, 9))
     rgb_imgs = lab_to_rgb(*split_lab(image))
-    if log:
-        ic("logging image")
-        images = wandb.Image(rgb_imgs, caption=caption)
-        wandb.log({"examples": images})
     plt.imshow(rgb_imgs[0])
     plt.show()
     # for i in range(rgb_imgs.shape[0]):
@@ -144,10 +140,10 @@ def print_distrib(x, str=None):
     assert isinstance(x, torch.Tensor)
     if str is not None:
         print(str)
-    ic(x.max())
-    ic(x.min())
-    ic(x.mean())
-    ic(x.std())
+    # ic(x.max())
+    # ic(x.min())
+    # ic(x.mean())
+    # ic(x.std())
     print()
 
         

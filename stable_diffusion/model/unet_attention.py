@@ -68,9 +68,9 @@ class SpatialTransformer(nn.Module):
         # Transpose and reshape from `[batch_size, channels, height, width]`
         # to `[batch_size, height * width, channels]`
         x = x.permute(0, 2, 3, 1).view(b, h * w, c)
-        # ic()
-        # ic(cond.shape)
-        # ic(x.shape)
+        # # ic()
+        # # ic(cond.shape)
+        # # ic(x.shape)
         # Apply the transformer layers
         for block in self.transformer_blocks:
             x = block(x, cond)
@@ -112,10 +112,10 @@ class BasicTransformerBlock(nn.Module):
         :param cond: is the conditional embeddings of shape `[batch_size,  n_cond, d_cond]`
         """
         # Self attention
-        # ic("self")
+        # # ic("self")
         x = self.attn1(self.norm1(x)) + x
         # Cross-attention with conditioning
-        # ic("crpss")
+        # # ic("crpss")
         x = self.attn2(self.norm2(x), cond=cond) + x
         # Feed-forward network
         x = self.ff(self.norm3(x)) + x
@@ -184,13 +184,13 @@ class CrossAttention(nn.Module):
         # If `cond` is `None` we perform self attention
         has_cond = cond is not None
         if not has_cond:
-            # ic()
-            # ic("fake cond")
+            # # ic()
+            # # ic("fake cond")
             cond = x
         # else:
-            # ic("real cond")
+            # # ic("real cond")
         # cond = x
-        # ic(cond.shape)
+        # # ic(cond.shape)
         # Get query, key and value vectors
         q = self.to_q(x)
         k = self.to_k(cond)

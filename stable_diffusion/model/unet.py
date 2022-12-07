@@ -175,12 +175,12 @@ class UNetModel(nn.Module):
 
         # Input half of the U-Net
         for module in self.input_blocks:
-            ic(x.shape)
+            # ic(x.shape)
             x = module(x, t_emb, cond)
             x_input_block.append(x)
         # Middle of the U-Net
-        # ic(x.shape)
-        ic("middle")
+        # # ic(x.shape)
+        # ic("middle")
         x = self.middle_block(x, t_emb, cond)
         # Output half of the U-Net
         for module in self.output_blocks:

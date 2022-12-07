@@ -53,6 +53,7 @@ class PLColorDiff(pl.LightningModule):
             self.autoenc_frozen = True
         self.enc_loss_coeff = enc_loss_coeff
         self.save_hyperparameters(ignore=['unet', 'autoencoder'])
+        ic.disable()
         # self.enc_lr = enc_lr
     def forward(self, x_noisy, t, x_l):
         """
@@ -95,10 +96,11 @@ class PLColorDiff(pl.LightningModule):
         self.log_dict(losses, on_step=True)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(x_0)
-        if batch_idx > 200 and self.autoenc_frozen is False:
+        if batch_idx > 4 and self.autoenc_frozen is False:
             print ("freezing autoencoder")
             freeze_module(self.autoenc)
-            torch.save(self.autoenc.state_dict(), "./earlystop_ae.pt")
+            torch.save(self.autoenc.state_dict(), "./earlystopppdistp_ae.pt")
+            del self.autoenc.decoder
             self.autoenc_frozen = True
             self.train_autoenc = False
         return losses["train loss"]
@@ -117,7 +119,12 @@ class PLColorDiff(pl.LightningModule):
         # learnable_params = self.unet.parameters() 
         global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
         return global_optim
-    
+    def log_img(self, image, caption="diff samples"):
+        rgb_imgs = lab_to_rgb(*split_lab(image))
+        # ic("logging image")
+        # images = wandb.Image(rgb_imgs, caption=caption)
+        self.logger.log_image("samples", [rgb_imgs])
+
     @torch.no_grad()
     def sample_loop(self, x_l, prog=False):
         """
@@ -163,4 +170,6 @@ class PLColorDiff(pl.LightningModule):
             show_lab_image(grid.unsqueeze(0), log=self.should_log)
             _ = lab_to_rgb(*split_lab(images[-1])) #debugging (this warns about pixels that are outside of valid LAB color range only for the final output image)
             plt.show()     
+        if self.should_log:
+            self.log_img(grid.unsqueeze(0))
         return images[-1]
