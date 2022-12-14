@@ -25,9 +25,9 @@ unet_config = dict(
     in_channels=3,
     out_channels=2,
     channels=128,
-    attention_levels=[1],
+    attention_levels=[1, 2],
     n_res_blocks=2,
-    channel_multipliers=[1, 2, 2, 3, 3],
+    channel_multipliers=[1, 2, 3, 3],
     # channe
     n_heads=2,
     tf_layers=1,
@@ -38,17 +38,17 @@ colordiff_config = dict(
     device = "gpu",
     pin_memory = True,
     T=350,
-    # lr=2e-4,
-    lr = 0.00017378008287493763,
+    lr=6e-4,
+    # lr = 0.00017378008287493763,
     batch_size=6,
     img_size = 128,
     sample=True,
     should_log=True,
-    epochs=3,
+    epochs=2,
     using_cond=True,
     display_every=200,
     dynamic_threshold=False,
-    train_autoenc=True,
+    train_autoenc=False,
     enc_loss_coeff = 1.5,
 ) 
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
     # ic.disable()
     # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
-    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=2, limit=30000)
+    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=16, limit=120000)
     log = True
     # exit()
     colordiff_config["should_log"] = True
@@ -72,25 +72,21 @@ if __name__ == "__main__":
                                             should_log=False)
     unet = UNetModel(**unet_config)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
-<<<<<<< Updated upstream
-=======
-    log = False
->>>>>>> Stashed changes
+    log = True
     colordiff_config["should_log"] = log
     ic.disable()
-    ckpt_callback = ModelCheckpoint(every_n_train_steps=400)
     if log:
         wandb_logger = WandbLogger(project="colordifflocal")
         # wandb_logger.watch(model)
         wandb_logger.experiment.config.update(colordiff_config)
         wandb_logger.experiment.config.update(unet_config)
     from pytorch_lightning.profiler import AdvancedProfiler
+    ckpt_callback = ModelCheckpoint(every_n_train_steps=300)
     profiler = AdvancedProfiler(dirpath="./", filename="profilee")
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
                         logger=wandb_logger if log is True else None, 
                         accelerator=colordiff_config["device"],
                         num_sanity_val_steps=1,
-                        default_root_dir="./saved_models",
                         devices= "auto",
                         log_every_n_steps=1,
                         callbacks=[ckpt_callback],
@@ -98,4 +94,10 @@ if __name__ == "__main__":
                         # accumulate_grad_batches=8,
                         # auto_lr_find=True,
                         )
-    trainer.fit(model, train_dl, val_dl)
+                        
+    print("""**************
+   HARDCODED LR WARNING 
+    
+   *********** 
+    """)
+    trainer.fit(model, train_dl, val_dl, ckpt_path="colordifflocal/36ajfifc/805mainmodel.ckpt")

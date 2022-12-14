@@ -84,25 +84,26 @@ class PLColorDiff(pl.LightningModule):
         diff_loss = self.l2(noise_pred, noise)
         train_loss = diff_loss
         if self.train_autoenc:
-            rec_loss = 0.4 * self.l1(x_l_rec, x_l) + self.l2(x_l_rec, x_l)
+            rec_loss = self.l2(x_l_rec, x_l)
             train_loss += self.enc_loss_coeff * rec_loss
         return {"train loss": train_loss,
                 "rec loss": rec_loss,
                 "diff loss": diff_loss}
     def training_step(self, x_0, batch_idx):
+        self.display_every = 70
         x_l, _ = split_lab(x_0)
         noise_pred, x_l_rec, noise = self.get_batch_pred(x_0, x_l)
         losses = self.get_losses(noise_pred, noise, x_l_rec, x_l)
         self.log_dict(losses, on_step=True)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(x_0)
-        if batch_idx > 3900 and self.autoenc_frozen is False:
-            print ("freezing autoencoder")
-            freeze_module(self.autoenc)
-            torch.save(self.autoenc.state_dict(), "./earlystopppdistp_ae.pt")
-            del self.autoenc.decoder
-            self.autoenc_frozen = True
-            self.train_autoenc = False
+        # if batch_idx > 3900 and self.autoenc_frozen is False:
+            # print ("freezing autoencoder")
+            # freeze_module(self.autoenc)
+            # torch.save(self.autoenc.state_dict(), "./earlystopppdistp_ae.pt")
+            # del self.autoenc.decoder
+            # self.autoenc_frozen = True
+            # self.train_autoenc = False
         return losses["train loss"]
     def validation_step(self, batch, batch_idx):
         val_loss = self.training_step(batch, batch_idx)
