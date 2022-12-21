@@ -1,4 +1,5 @@
 import torch
+from deepface import DeepFace
 from tqdm import tqdm
 import pytorch_lightning as pl
 from diffusion import GaussianDiffusion
@@ -71,6 +72,8 @@ class PLColorDiff(pl.LightningModule):
         self.display_every = display_every
         self.val_dl = val_dl
         self.train_dl = train_dl
+        # self.feature_extractor = DeepFace.build_model('VGG-Face')
+        # self.feature_extractor = DeepFace.build_model('Facenet512')
         self.autoenc = autoencoder
         self.autoenc_frozen = False
         self.train_autoenc = train_autoenc
@@ -82,19 +85,20 @@ class PLColorDiff(pl.LightningModule):
         self.save_hyperparameters(ignore=['unet', 'autoencoder'])
         ic.disable()
         # self.enc_lr = enc_lr
-    def forward(self, x_noisy, t, x_l):
+    def forward(self, ab_noised, t, x_l):
         """
         Performs one denoising step on batch of inputs noised with timesteps t, and makes an embedding of the original greyscale channel to condition the unet if self.using_cond is True
         """
         if self.using_cond:
             assert x_l is not None
             cond_emb = self.autoenc.encoder(x_l)
-            noise_pred = self.unet(x_noisy, t, cond_emb)
+            # cond_emb = self.feature_extractor.represent(x_l)
+            noise_pred = self.unet(ab_noised, t, cond_emb)
             if self.train_autoenc:
                 x_l_rec = self.autoenc.decoder(cond_emb)
             else: x_l_rec = None
         else:
-            noise_pred = self.unet(x_noisy, t)
+            noise_pred = self.unet(ab_noised, t)
         return noise_pred, x_l_rec
     def get_batch_pred(self, x_0, x_l):
         """
@@ -105,8 +109,8 @@ class PLColorDiff(pl.LightningModule):
         """
         t = torch.randint(0, self.T, (x_0.shape[0],)).to(x_0)
         # print(f"t:  = {t}")
-        x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
-        return (*self(x_noisy, t, x_l), noise)
+        ab_noised, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
+        return (*self(ab_noised, t, x_l), noise)
     def get_losses(self, noise_pred, noise, x_l_rec, x_l):
         rec_loss = 0.
         diff_loss = self.l2(noise_pred, noise)
@@ -124,14 +128,16 @@ class PLColorDiff(pl.LightningModule):
         self.log_dict(losses, on_step=True)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(x_0)
-        # if batch_idx > 3900 and self.autoenc_frozen is False:
-            # print ("freezing autoencoder")
-            # freeze_module(self.autoenc)
-            # torch.save(self.autoenc.state_dict(), "./earlystopppdistp_ae.pt")
-            # del self.autoenc.decoder
-            # self.autoenc_frozen = True
-            # self.train_autoenc = False
+        if batch_idx > 1 and self.autoenc_frozen is False:
+            print ("freezing autoencoder")
+            freeze_module(self.autoenc)
+            torch.save(self.autoenc.state_dict(), "./frozenae.pt")
+            del self.autoenc.decoder
+            self.autoenc_frozen = True
+            self.train_autoenc = False
         return losses["total loss"]
+    # def on_train_epoch_end(self) -> None:
+    #     return 
     def validation_step(self, batch, batch_idx):
         x_l, _ = split_lab(batch)
         noise_pred, x_l_rec, noise = self.get_batch_pred(batch, x_l)
@@ -146,22 +152,27 @@ class PLColorDiff(pl.LightningModule):
     def test_step(self, batch, *args, **kwargs):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
+        self.sample_plot_image(x, ema=self.ema)
     def configure_optimizers(self):
         learnable_params = list(self.unet.parameters())
+        # print("learnable Params", learnable_params)
         if self.train_autoenc:
-            learnable_params += list(self.autoenc.parameters())
+            learnable_params += list(self.autoenc.encoder.parameters())
         # learnable_params = self.unet.parameters() 
         global_optim = torch.optim.AdamW(learnable_params, lr=self.lr)
         return global_optim
-    def log_img(self, image, caption="diff samples"):
+    def log_img(self, image, caption="diff samples", ema=None):
         rgb_imgs = lab_to_rgb(*split_lab(image))
         # ic("logging image")
         # images = wandb.Image(rgb_imgs, caption=caption)
-        self.logger.log_image("samples", [rgb_imgs])
+        if ema is not None:
+            self.logger.log_image("EMA samples", [rgb_imgs])
+        else:
+            self.logger.log_image("samples", [rgb_imgs])
     def on_before_zero_grad(self, *args, **kwargs):
-        self.ema.update(self.unet.parameters())
+        self.ema.update()
     @torch.inference_mode()
-    def sample_loop(self, x_l, prog=False):
+    def sample_loop(self, x_l, prog=False, ema=None):
         """
         Noises the image to timestep T (color channels are random)
         Then autoregressively denoises the color channels to t=0 to get the colorized image
@@ -179,12 +190,12 @@ class PLColorDiff(pl.LightningModule):
         #Progressively 
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, encoder=self.autoenc.encoder)
+            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, encoder=self.autoenc.encoder, ema=ema)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         return images
     @torch.inference_mode()
-    def sample_plot_image(self, x_0, show=True, prog=False):
+    def sample_plot_image(self, x_0, show=True, prog=False, ema=None):
         """
         Denoises a single image and displays a grid showing the ground truth, intermediate outputs in the denoising process, and the final denoised image
         """
@@ -199,12 +210,12 @@ class PLColorDiff(pl.LightningModule):
         ground_truth_images += greyscale.unsqueeze(0) #add greyscale version of ground truth (model input before noising) to image grid
         if len(x_l.shape) == 3:
             x_l = x_l.unsqueeze(0)
-        images = ground_truth_images + self.sample_loop(x_l, prog=prog)
+        images = ground_truth_images + self.sample_loop(x_l, prog=prog, ema=ema)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
         if show:
             show_lab_image(grid.unsqueeze(0), log=self.should_log)
             _ = lab_to_rgb(*split_lab(images[-1])) #debugging (this warns about pixels that are outside of valid LAB color range only for the final output image)
             plt.show()     
         if self.should_log:
-            self.log_img(grid.unsqueeze(0))
+            self.log_img(grid.unsqueeze(0), ema=ema)
         return images[-1]

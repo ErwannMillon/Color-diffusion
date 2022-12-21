@@ -46,6 +46,7 @@ class GreyscaleAutoEnc(pl.LightningModule):
         if batch_idx % self.display_every == 0:
             self.test_step(batch)
         return loss
+    @torch.inference_mode()
     def test_step(self, batch, *args):
         x = next(iter(self.val_dl)).to(batch)
         #TODO Check if split lab return xl when given xl only
@@ -63,9 +64,15 @@ class GreyscaleAutoEnc(pl.LightningModule):
         if self.should_log:
             rgb_imgs = lab_to_rgb(*split_lab(grid.unsqueeze(0)))
             self.logger.log_image("samples", [rgb_imgs])
-        plt.show()
+        # plt.show()
     def validation_step(self, batch, batch_idx):
-        loss = self.training_step(batch, batch_idx)
+        x_l, _ = split_lab(batch)
+        rec = self(batch)
+        loss = self.loss(rec, x_l)
+        if self.should_log:
+            self.log("val_loss", loss, on_step=True)
+        if batch_idx % self.display_every == 0:
+            self.test_step(batch)
         return loss
     def configure_optimizers(self):
         learnable_params = list(self.decoder.parameters()) + list(self.encoder.parameters())

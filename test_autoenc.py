@@ -28,20 +28,20 @@ if __name__ == "__main__":
     encoder_conf = dict(
         in_channels=1,
         channels=64,
-        channel_multipliers=[1, 1, 2, 3],
+        channel_multipliers=[1, 2, 2],
         n_resnet_blocks=2,
-        z_channels=256
+        z_channels=128
     )
     colordiff_config = dict(
         device = "gpu",
         pin_memory = True,
         T=350,
         lr=1e-4,
-        batch_size=32,
+        batch_size=28,
         img_size = 128,
         sample=True,
         should_log=True,
-        epochs=1,
+        epochs=9,
         using_cond=True,
         display_every=200,
         dynamic_threshold=False,
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # colordiff_config = default_configs.ColorDiffConfig
     colordiff_config["device"] = "gpu"
     # colordiff_config["device"] = "mps"
-    train_dl, val_dl = make_dataloaders_celeba("./celeba/img_align_celeba", colordiff_config, num_workers=4, limit=30000)
+    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=4, limit=10000)
     log = True
     if log:
         wandb_logger = WandbLogger(project="autoencpretrain")
@@ -60,6 +60,7 @@ if __name__ == "__main__":
     ckpt_callback = ModelCheckpoint(every_n_train_steps=400)
     autoenc = GreyscaleAutoEnc(encoder_conf,
                                 val_dl,
+                                img_size=colordiff_config["img_size"],
                                 display_every=20,
                                 should_log=True)
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
@@ -69,4 +70,4 @@ if __name__ == "__main__":
                     callbacks=[ckpt_callback],
                     log_every_n_steps=2
                     )
-    trainer.fit(autoenc, train_dl, val_dl, ckpt_path="800ae.ckpt")
+    trainer.fit(autoenc, train_dl, val_dl)

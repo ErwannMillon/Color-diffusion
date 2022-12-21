@@ -24,6 +24,16 @@ def split_lab(image):
 		ab = image[:, 1:,]	
 	return (l, ab)
 
+def custom_to_pil(x, process=True):
+  x = x.detach().cpu()
+  if process:
+    x = torch.clamp(x, -1., 1.)
+    x = (x + 1.)/2.
+  x = x.permute(1,2,0).numpy()
+  if process:
+    x = (255*x).astype(np.uint8)
+  return x
+
 def show_lab_image(image, stepsize=10, log=True,caption="diff samples"):
     # image = torch.nn.functional.normalize(image)
     # image = torch.clamp(image, -1, 1)
