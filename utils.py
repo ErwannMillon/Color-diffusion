@@ -36,8 +36,7 @@ def show_lab_image(image, stepsize=10, log=True,caption="diff samples"):
     # plt.figure(figsize=(10, 10))
     # plt.ion()
     
-def init_weights(net, init='norm', gain=0.02):
-    
+def init_weights(net, init='norm', gain=2**0.5, leakyslope=0.02):
     def init_func(m):
         classname = m.__class__.__name__
         if hasattr(m, 'weight') and 'Conv' in classname:
@@ -46,14 +45,14 @@ def init_weights(net, init='norm', gain=0.02):
             elif init == 'xavier':
                 nn.init.xavier_normal_(m.weight.data, gain=gain)
             elif init == 'kaiming':
-                nn.init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
-            
+                nn.init.kaiming_normal_(m.weight.data, mode='fan_in', nonlinearity='relu')
+
             if hasattr(m, 'bias') and m.bias is not None:
                 nn.init.constant_(m.bias.data, 0.0)
         elif 'BatchNorm2d' in classname:
             nn.init.normal_(m.weight.data, 1., gain)
             nn.init.constant_(m.bias.data, 0.)
-            
+
     net.apply(init_func)
     print(f"model initialized with {init} initialization")
     return net

@@ -3,13 +3,36 @@ from tqdm import tqdm
 import pytorch_lightning as pl
 from diffusion import GaussianDiffusion
 from sample import dynamic_threshold
-from utils import cat_lab, freeze_module, lab_to_rgb, show_lab_image, split_lab
+from utils import cat_lab, freeze_module, lab_to_rgb, show_lab_image, split_lab, init_weights
 import torch.nn.functional as F
 import torchvision
 import wandb
 from matplotlib import pyplot as plt
 from cond_encoder import Encoder
 from icecream import ic
+from copy import deepcopy
+from torch_ema import ExponentialMovingAverage
+
+# class EMA(torch.nn.Module):
+#     """ Model Exponential Moving Average V2 from timm"""
+#     def __init__(self, model, decay=0.9999):
+#         super(EMA, self).__init__()
+#         # make a copy of the model for accumulating moving average of weights
+#         self.module = deepcopy(model)
+#         self.module.eval()
+#         self.decay = decay
+
+#     def _update(self, model, update_fn):
+#         with torch.no_grad():
+#             for ema_v, model_v in zip(self.module.state_dict().values(), model.state_dict().values()):
+#                 ema_v.copy_(update_fn(ema_v, model_v))
+
+#     def update(self, model):
+#         self._update(model, update_fn=lambda e, m: self.decay * e + (1. - self.decay) * m)
+
+#     def set(self, model):
+#         self._update(model, update_fn=lambda e, m: m)
+
 class PLColorDiff(pl.LightningModule):
     def __init__(self,
                 unet, 
@@ -28,13 +51,17 @@ class PLColorDiff(pl.LightningModule):
                 display_every=None,
                 train_autoenc=False,
                 dynamic_threshold=True,
+                use_ema=True,
                 **kwargs):
         super().__init__()
         self.unet = unet.to(self.device)
+        # init_weights(self.unet, init="kaiming")
         self.T = T
         self.lr = lr
         self.using_cond = using_cond
         self.sample = sample
+        self.ema = ExponentialMovingAverage(self.unet.parameters(), decay=0.9999)
+        self.ema.to("cuda")
         self.diffusion = GaussianDiffusion(T, dynamic_threshold=dynamic_threshold)
         self.l1 = torch.nn.functional.l1_loss
         self.l2 = torch.nn.functional.mse_loss
@@ -77,6 +104,7 @@ class PLColorDiff(pl.LightningModule):
         - The real noise applied to the image by the forward diffusion process
         """
         t = torch.randint(0, self.T, (x_0.shape[0],)).to(x_0)
+        # print(f"t:  = {t}")
         x_noisy, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
         return (*self(x_noisy, t, x_l), noise)
     def get_losses(self, noise_pred, noise, x_l_rec, x_l):
@@ -86,11 +114,10 @@ class PLColorDiff(pl.LightningModule):
         if self.train_autoenc:
             rec_loss = self.l2(x_l_rec, x_l)
             train_loss += self.enc_loss_coeff * rec_loss
-        return {"train loss": train_loss,
+        return {"total loss": train_loss,
                 "rec loss": rec_loss,
                 "diff loss": diff_loss}
     def training_step(self, x_0, batch_idx):
-        self.display_every = 70
         x_l, _ = split_lab(x_0)
         noise_pred, x_l_rec, noise = self.get_batch_pred(x_0, x_l)
         losses = self.get_losses(noise_pred, noise, x_l_rec, x_l)
@@ -104,14 +131,18 @@ class PLColorDiff(pl.LightningModule):
             # del self.autoenc.decoder
             # self.autoenc_frozen = True
             # self.train_autoenc = False
-        return losses["train loss"]
+        return losses["total loss"]
     def validation_step(self, batch, batch_idx):
-        val_loss = self.training_step(batch, batch_idx)
+        x_l, _ = split_lab(batch)
+        noise_pred, x_l_rec, noise = self.get_batch_pred(batch, x_l)
+        losses = self.get_losses(noise_pred, noise, x_l_rec, x_l)
+        # val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
-            self.log("val loss", val_loss, on_step=True)
+            self.log("val_loss", losses["total loss"])
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.sample_plot_image(batch)
-        return val_loss
+        return losses["total loss"]
+    @torch.inference_mode()
     def test_step(self, batch, *args, **kwargs):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
@@ -120,15 +151,16 @@ class PLColorDiff(pl.LightningModule):
         if self.train_autoenc:
             learnable_params += list(self.autoenc.parameters())
         # learnable_params = self.unet.parameters() 
-        global_optim = torch.optim.Adam(learnable_params, lr=self.lr)
+        global_optim = torch.optim.AdamW(learnable_params, lr=self.lr)
         return global_optim
     def log_img(self, image, caption="diff samples"):
         rgb_imgs = lab_to_rgb(*split_lab(image))
         # ic("logging image")
         # images = wandb.Image(rgb_imgs, caption=caption)
         self.logger.log_image("samples", [rgb_imgs])
-
-    @torch.no_grad()
+    def on_before_zero_grad(self, *args, **kwargs):
+        self.ema.update(self.unet.parameters())
+    @torch.inference_mode()
     def sample_loop(self, x_l, prog=False):
         """
         Noises the image to timestep T (color channels are random)
@@ -151,7 +183,7 @@ class PLColorDiff(pl.LightningModule):
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         return images
-    @torch.no_grad()
+    @torch.inference_mode()
     def sample_plot_image(self, x_0, show=True, prog=False):
         """
         Denoises a single image and displays a grid showing the ground truth, intermediate outputs in the denoising process, and the final denoised image

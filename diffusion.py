@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch import optim
-from models import init_weights
+from utils import init_weights
 import torch.nn.functional as F
 from sample import dynamic_threshold
 from utils import cat_lab, split_lab

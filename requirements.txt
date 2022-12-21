@@ -1,4 +1,7 @@
 einops
+torch-ema
+wandb
+ema-pytorch
 einops_exts
 helpers
 icecream
