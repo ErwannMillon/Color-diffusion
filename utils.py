@@ -18,11 +18,11 @@ def get_device():
     return (device)
 
 def split_lab(image):
-	assert isinstance(image, torch.Tensor)
-	if isinstance(image, torch.Tensor):
-		l = image[:, :1,]
-		ab = image[:, 1:,]	
-	return (l, ab)
+    assert isinstance(image, torch.Tensor)
+    if isinstance(image, torch.Tensor):
+        l = image[:, :1,]
+        ab = image[:, 1:,]	
+    return (l, ab)
 
 def custom_to_pil(x, process=True):
   x = x.detach().cpu()
@@ -121,11 +121,9 @@ def update_losses(model, loss_meter_dict, count):
         loss_meter.update(loss.item(), count=count)
 
 def split_lab(image):
-	assert isinstance(image, torch.Tensor)
-	if isinstance(image, torch.Tensor):
-		l = image[:, :1,]
-		ab = image[:, 1:,]	
-	return (l, ab)
+    assert isinstance(image, torch.Tensor)
+    return torch.split(image, [1, 2], dim=1)
+
 
 def cat_lab(L, ab):
     return (torch.cat((L, ab), dim=1))

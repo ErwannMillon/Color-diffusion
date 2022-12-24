@@ -40,8 +40,8 @@ class ColorizationDataset(Dataset):
         if split == 'train':
             self.transforms = transforms.Compose([
                 transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(brightness=(0.0,0.3), contrast=(0., 0.2), saturation=(0.1, 0.4), hue=0.0),
-                transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
+                transforms.ColorJitter(brightness=0.3, contrast=0.1, saturation=(1., 1.8), hue=0.05),
+                # transforms.GaussianBlur(kernel_size=3, sigma=(0.5, .5)),
                 transforms.Resize((size, size), Image.BICUBIC)
             ])
         elif split == 'val':
@@ -87,7 +87,7 @@ class PickleColorizationDataset(ColorizationDataset):
         return(torch.load(self.paths[idx]))
 import csv
 
-def make_dataloaders_celeba(path, config, num_workers=0, limit=None):
+def make_dataloaders_celeba(path, config, num_workers=0, shuffle=True, limit=None):
     img_paths = glob.glob(path + "/*")
     n_imgs = len(img_paths)
     train_split = img_paths[:int(n_imgs * .9)]
@@ -96,10 +96,10 @@ def make_dataloaders_celeba(path, config, num_workers=0, limit=None):
     val_dataset = ColorizationDataset(val_split, split="val", config=config, size=config["img_size"], limit=limit//10)
     print(f"train size: {len(train_split)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
-                            num_workers=num_workers, pin_memory=config["pin_memory"], persistent_workers=True, shuffle=True)
+                            num_workers=num_workers, pin_memory=config["pin_memory"], persistent_workers=True, shuffle=shuffle)
     print(f"val size: {len(val_split)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
-                            num_workers=num_workers, pin_memory=config["pin_memory"], persistent_workers=True, shuffle=True)
+                            num_workers=num_workers, pin_memory=config["pin_memory"], persistent_workers=True, shuffle=shuffle)
     return train_dl, val_dl
 
 def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pickle=True):
@@ -128,7 +128,7 @@ def make_dataloaders(path, config, use_csv=True, num_workers=0, limit=None, pick
                             num_workers=num_workers, pin_memory=config["pin_memory"])
     print(f"val size: {len(val_dataset.paths)}")
     val_dl = DataLoader(val_dataset, batch_size=config["batch_size"], 
-                            num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=True)
+                            num_workers=num_workers, pin_memory=config["pin_memory"], shuffle=shuffle)
     return train_dl, val_dl
 if __name__ == "__main__":
     from default_configs import ColorDiffConfig

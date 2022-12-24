@@ -85,20 +85,20 @@ class PLColorDiff(pl.LightningModule):
         self.save_hyperparameters(ignore=['unet', 'autoencoder'])
         ic.disable()
         # self.enc_lr = enc_lr
-    def forward(self, ab_noised, t, x_l):
+    def forward(self, x_noised, t, x_l):
         """
         Performs one denoising step on batch of inputs noised with timesteps t, and makes an embedding of the original greyscale channel to condition the unet if self.using_cond is True
         """
         if self.using_cond:
             assert x_l is not None
             cond_emb = self.autoenc.encoder(x_l)
-            # cond_emb = self.feature_extractor.represent(x_l)
-            noise_pred = self.unet(ab_noised, t, cond_emb)
+            # cond_emb = torch.Tensor(self.feature_extractor.represent(x_l))
+            noise_pred = self.unet(x_noised, t, cond_emb)
             if self.train_autoenc:
                 x_l_rec = self.autoenc.decoder(cond_emb)
             else: x_l_rec = None
         else:
-            noise_pred = self.unet(ab_noised, t)
+            noise_pred = self.unet(x_noised, t)
         return noise_pred, x_l_rec
     def get_batch_pred(self, x_0, x_l):
         """
@@ -109,8 +109,8 @@ class PLColorDiff(pl.LightningModule):
         """
         t = torch.randint(0, self.T, (x_0.shape[0],)).to(x_0)
         # print(f"t:  = {t}")
-        ab_noised, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
-        return (*self(ab_noised, t, x_l), noise)
+        x_noised, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
+        return (*self(x_noised, t, x_l), noise)
     def get_losses(self, noise_pred, noise, x_l_rec, x_l):
         rec_loss = 0.
         diff_loss = self.l2(noise_pred, noise)

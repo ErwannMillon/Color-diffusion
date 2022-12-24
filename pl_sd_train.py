@@ -26,8 +26,8 @@ encoder_conf = dict(
 small_unet = dict(
     in_channels=2,
     out_channels=2,
-    channels=64,
-    attention_levels=[0, 1, 2],
+    channels=128,
+    attention_levels=[1, 2],
     n_res_blocks=2,
     channel_multipliers=[1, 2, 3],
     # channe
@@ -37,7 +37,7 @@ small_unet = dict(
 )
 
 unet_config = dict(
-    in_channels=2,
+    in_channels=3,
     out_channels=2,
     channels=128,
     attention_levels=[1, 2],
@@ -55,13 +55,13 @@ colordiff_config = dict(
     T=350,
     # lr=6e-4,
     lr = 1e-5,
-    batch_size=3,
+    batch_size=5,
     img_size = 128,
     sample=True,
     should_log=True,
     epochs=5,
     using_cond=True,
-    display_every=20,
+    display_every=200,
     dynamic_threshold=False,
     train_autoenc=False,
     enc_loss_coeff = 1.1,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
     # ic.disable()
     # train_dl, val_dl = make_dataloaders("./fairface_preprocessed/preprocessed_fairface", colordiff_config, pickle=True, use_csv=False, num_workers=4)
-    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=150)
+    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=18000)
     log = True
     # exit()
     autoenc = GreyscaleAutoEnc.load_from_checkpoint("autoencpretrain/2gyi15mo/checkpoints/epoch=4-step=1600.ckpt",  
@@ -84,7 +84,7 @@ if __name__ == "__main__":
                                             display_every=50,
                                             should_log=False)
     # autoenc = GreyscaleAutoEnc(encoder_config=encoder_conf, val_dl=val_dl, display_every=50, should_log=False)
-    unet = UNetModel(**unet_config)
+    unet = UNetModel(**small_unet)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
     # model = PLColorDiff.load_from_checkpoint("/home/ec2-user/Color-diffusion/Color_diffusion_dec/azure0.ckpt", unet=unet, train_dl=train_dl, val_dl=val_dl, autoencoder=autoenc, **colordiff_config)
     log = True
