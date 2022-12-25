@@ -51,7 +51,7 @@ class GaussianDiffusion(LightningModule):
         return(noised_img, noise)
 
     @torch.no_grad()
-    def sample_timestep(self, model, x, t, cond=None, T=300, ema=None):
+    def sample_timestep(self, model, encoder, x, t, cond=None, T=300, ema=None):
         """
         Calls the model to predict the noise in the image and returns 
         the denoised image. 
@@ -64,11 +64,12 @@ class GaussianDiffusion(LightningModule):
         )
         sqrt_recip_alphas_t = get_index_from_list(self.sqrt_recip_alphas, t, x.shape)
         # Call model (current image - noise prediction)
+        greyscale_emb = encoder(x_l)
         if ema is not None:
             with ema.average_parameters():
-                pred = model(x, t)
+                pred = model(x, t, greyscale_emb)
         else:
-            pred = model(x, t)
+            pred = model(x, t, greyscale_emb)
         # pred = model(x, t)
         beta_times_pred = betas_t * pred
         model_mean = sqrt_recip_alphas_t * (

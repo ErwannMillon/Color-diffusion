@@ -39,6 +39,8 @@ class ColorDiffusion(pl.LightningModule):
                 unet, 
                 train_dl,
                 val_dl,
+                encoder,
+                loss_fn="l2",
                 T=300,
                 lr=1e-4,
                 batch_size=12,
@@ -58,10 +60,10 @@ class ColorDiffusion(pl.LightningModule):
         self.using_cond = using_cond
         self.sample = sample
         self.ema = ExponentialMovingAverage(self.unet.parameters(), decay=0.9999)
+        self.encoder = encoder
         self.ema.to("cuda")
         self.diffusion = GaussianDiffusion(T, dynamic_threshold=dynamic_threshold)
-        self.l1 = torch.nn.functional.l1_loss
-        self.l2 = torch.nn.functional.mse_loss
+        self.loss_fn = torch.nn.functional.l1_loss if loss_fn == "l1" else torch.nn.functional.mse_loss
         self.should_log=should_log
         if sample is True and display_every is None:
             display_every = 1000
@@ -75,7 +77,8 @@ class ColorDiffusion(pl.LightningModule):
         """
         Performs one denoising step on batch of inputs noised with timesteps t, and makes an embedding of the original greyscale channel to condition the unet if self.using_cond is True
         """
-        noise_pred = self.unet(x_noised, t)
+        cond = self.encoder(x_l) # if self.using_cond else None
+        noise_pred = self.unet(x_noised, t, cond)
         return noise_pred
     def get_batch_pred(self, x_0, x_l):
         """
@@ -90,7 +93,7 @@ class ColorDiffusion(pl.LightningModule):
         return (self(x_noised, t, x_l), noise)
     def get_losses(self, noise_pred, noise, x_l):
         rec_loss = 0.
-        diff_loss = self.l2(noise_pred, noise)
+        diff_loss = self.loss_fn(noise_pred, noise)
         train_loss = diff_loss
         return {"total loss": train_loss}
     def training_step(self, x_0, batch_idx):
@@ -98,7 +101,8 @@ class ColorDiffusion(pl.LightningModule):
         noise_pred, noise = self.get_batch_pred(x_0, x_l)
         losses = self.get_losses(noise_pred, noise, x_l)
         self.log_dict(losses, on_step=True)
-        if self.sample and batch_idx and batch_idx % self.display_every == 0:
+        # print(self.global_step)
+        if self.sample and batch_idx and batch_idx % self.display_every == 0 and self.global_step > 1:
             self.test_step(x_0)
         return losses["total loss"]
     # def on_train_epoch_end(self) -> None:
@@ -119,8 +123,8 @@ class ColorDiffusion(pl.LightningModule):
         self.sample_plot_image(x)
         self.sample_plot_image(x, ema=self.ema)
     def configure_optimizers(self):
-        learnable_params = list(self.unet.parameters())
-        global_optim = torch.optim.AdamW(learnable_params, lr=self.lr)
+        learnable_params = list(self.unet.parameters()) + list(self.encoder.parameters())
+        global_optim = torch.optim.AdamW(learnable_params, lr=self.lr, weight_decay=28e-3)
         return global_optim
     def log_img(self, image, caption="diff samples", ema=None):
         rgb_imgs = lab_to_rgb(*split_lab(image))
@@ -151,7 +155,7 @@ class ColorDiffusion(pl.LightningModule):
         #Progressively 
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            img = self.diffusion.sample_timestep(self.unet, img, t, T=self.T, cond=x_l, ema=ema)
+            img = self.diffusion.sample_timestep(self.unet, self.encoder, img, t, T=self.T, cond=x_l, ema=ema)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
         return images

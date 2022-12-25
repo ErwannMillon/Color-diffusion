@@ -18,21 +18,23 @@ colordiff_config = dict(
     pin_memory = True,
     T=350,
     # lr=6e-4,
-    lr = 5e-6,
-    batch_size=4,
-    img_size = 128,
+    lr = 3e-4,
+    loss_fn = "l2",
+    batch_size=72,
+    accumulate_grad_batches=1,
+    img_size = 64,
     sample=True,
     should_log=True,
-    epochs=9,
+    epochs=200,
     using_cond=True,
-    display_every=200,
+    display_every=100,
     dynamic_threshold=False,
     train_autoenc=False,
     enc_loss_coeff = 1.1,
 ) 
 if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
-    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=6000)
+    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=20000)
     log = True
 
     unet_config = dict(
@@ -40,17 +42,17 @@ if __name__ == "__main__":
         dropout=0.3,
         self_condition=False,
         out_dim=2,
-        dim=128,
+        dim=64,
         condition=True,
-        dim_mults=[1, 2, 2, 3],
+        dim_mults=[1, 2, 4, 8],
     )
     enc_config = dict(
         channels=1,
         dropout=0.3,
         self_condition=False,
         out_dim=2,
-        dim=128,
-        dim_mults=[1, 2, 2, 3],
+        dim=64,
+        dim_mults=[1, 2, 4, 8],
     )
 
 
@@ -59,11 +61,11 @@ if __name__ == "__main__":
     )
     unet = Unet(
         **unet_config,
-        encoder=encoder,
-
     ) 
-    model = ColorDiffusion(unet=unet, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
-    log = False
+    model = ColorDiffusion(unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
+    # model = ColorDiffusion.load_from_checkpoint("Color_diffusion_v2/3cma4wob/checkpoints/last.ckpt", unet=unet, encoder=encoder, train_dl=train_dl, val_dl=train_dl, **colordiff_config)
+    # model = torch.compile(model)
+    log = True
     colordiff_config["sample"] = log
     colordiff_config["should_log"] = log
     ic.disable()
@@ -89,10 +91,10 @@ if __name__ == "__main__":
                         accelerator=colordiff_config["device"],
                         num_sanity_val_steps=1,
                         devices= "auto",
-                        log_every_n_steps=2,
+                        log_every_n_steps=3,
                         callbacks=[ckpt_callback],
                         profiler="simple",
-                        accumulate_grad_batches=1,
+                        accumulate_grad_batches=colordiff_config["accumulate_grad_batches"],
                         # auto_lr_find=True,
                         )
     trainer.fit(model, train_dl, val_dl)

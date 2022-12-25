@@ -269,7 +269,7 @@ class Unet(nn.Module):
     def __init__(
         self,
         dim,
-        encoder=None,
+        # encoder=None,
         init_dim = None,
         dropout = 0.,
         out_dim = None,
@@ -287,7 +287,7 @@ class Unet(nn.Module):
 
         # determine dimensions
         self.condition = condition
-        self.encoder = encoder if condition else None
+        # self.encoder = encoder if condition else None
         self.channels = channels
         self.self_condition = self_condition
         self.dropout = dropout
@@ -358,10 +358,10 @@ class Unet(nn.Module):
         self.final_res_block = block_klass(dim * 2, dim, time_emb_dim = time_dim)
         self.final_conv = nn.Conv2d(dim, self.out_dim, 1)
 
-    def forward(self, x, time, x_self_cond = None):
-        if self.condition:
-            x_l, x_ab = split_lab(x)
-            greyscale_embs = self.encoder(x_l)
+    def forward(self, x, time, greyscale_embs=None, x_self_cond = None):
+        # if self.condition:
+            # x_l, x_ab = split_lab(x)
+            # greyscale_embs = self.encoder(x_l)
         if self.self_condition:
             x_self_cond = default(x_self_cond, lambda: torch.zeros_like(x))
             x = torch.cat((x_self_cond, x), dim = 1)
@@ -381,7 +381,7 @@ class Unet(nn.Module):
             x = attn(x)
             h.append(x)
             x = torch.cat((x, greyscale_embs[i]), dim = 1)
-            print(x.shape)
+            # print(x.shape)
             x = downsample(x)
 
         x = self.mid_block1(x, t)
@@ -960,7 +960,6 @@ class Encoder(nn.Module):
         block_klass = partial(ResnetBlock, groups = resnet_block_groups)
 
         # time embeddings
-
         time_dim = dim * 4
 
         self.random_or_learned_sinusoidal_cond = learned_sinusoidal_cond or random_fourier_features

@@ -142,6 +142,10 @@ def lab_to_rgb(L, ab):
         rgb_imgs.append(img_rgb)
     return np.stack(rgb_imgs, axis=0)
 
+def l_to_rgb(L):
+    L = (L + 1.) * 50.
+    print(L.min(), L.max())
+
 
 def print_distrib(x, str=None):
     assert isinstance(x, torch.Tensor)
