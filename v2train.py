@@ -13,28 +13,48 @@ import default_configs
 from denoising import Unet, Encoder
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+# colordiff_config = dict(
+#     device = "gpu",
+#     pin_memory = True,
+#     T=350,
+#     # lr=6e-4,
+#     lr = 5e-6,
+#     loss_fn = "l2",
+#     batch_size=18,
+#     accumulate_grad_batches=4,
+#     img_size = 128,
+#     sample=True,
+#     should_log=True,
+#     epochs=200,
+#     using_cond=True,
+#     display_every=100,
+#     dynamic_threshold=False,
+#     train_autoenc=False,
+#     enc_loss_coeff = 1.1,
+# ) 
 colordiff_config = dict(
     device = "gpu",
     pin_memory = True,
     T=350,
     # lr=6e-4,
-    lr = 3e-4,
+    lr = 5e-7,
     loss_fn = "l2",
-    batch_size=72,
-    accumulate_grad_batches=1,
-    img_size = 64,
+    batch_size=10,
+    accumulate_grad_batches=7,
+    img_size = 128,
     sample=True,
     should_log=True,
-    epochs=200,
+    epochs=14,
     using_cond=True,
-    display_every=100,
+    display_every=200,
     dynamic_threshold=False,
     train_autoenc=False,
     enc_loss_coeff = 1.1,
 ) 
+
 if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
-    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=20000)
+    train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=35000)
     log = True
 
     unet_config = dict(
@@ -42,17 +62,17 @@ if __name__ == "__main__":
         dropout=0.3,
         self_condition=False,
         out_dim=2,
-        dim=64,
+        dim=128,
         condition=True,
-        dim_mults=[1, 2, 4, 8],
+        dim_mults=[1, 2, 3, 3],
     )
     enc_config = dict(
         channels=1,
         dropout=0.3,
         self_condition=False,
         out_dim=2,
-        dim=64,
-        dim_mults=[1, 2, 4, 8],
+        dim=128,
+        dim_mults=[1, 2, 3, 3],
     )
 
 
@@ -62,7 +82,11 @@ if __name__ == "__main__":
     unet = Unet(
         **unet_config,
     ) 
-    model = ColorDiffusion(unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
+    ckpt = "Color_diffusion_v2/14770d8r/checkpoints/last.ckpt"
+    if ckpt is not None:
+        model = ColorDiffusion.load_from_checkpoint(ckpt, strict=False, unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
+    else:
+        model = ColorDiffusion(unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
     # model = ColorDiffusion.load_from_checkpoint("Color_diffusion_v2/3cma4wob/checkpoints/last.ckpt", unet=unet, encoder=encoder, train_dl=train_dl, val_dl=train_dl, **colordiff_config)
     # model = torch.compile(model)
     log = True

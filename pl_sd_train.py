@@ -18,7 +18,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 encoder_conf = dict(
     in_channels=1,
     channels=64,
-    channel_multipliers=[1, 2, 2],
+    channel_multipliers=[1, 2, 4, 4],
     n_resnet_blocks=2,
     z_channels=128
 )
@@ -27,9 +27,9 @@ small_unet = dict(
     in_channels=2,
     out_channels=2,
     channels=128,
-    attention_levels=[1, 2],
+    attention_levels=[2],
     n_res_blocks=2,
-    channel_multipliers=[1, 2, 3],
+    channel_multipliers=[1, 2, 4, 4],
     # channe
     n_heads=1,
     tf_layers=1,
@@ -39,10 +39,10 @@ small_unet = dict(
 unet_config = dict(
     in_channels=3,
     out_channels=2,
-    channels=128,
-    attention_levels=[1, 2],
+    channels=64,
+    attention_levels=[2],
     n_res_blocks=2,
-    channel_multipliers=[1, 2, 3, 3],
+    channel_multipliers=[1, 2, 3, 4],
     # channe
     n_heads=2,
     tf_layers=1,
@@ -56,7 +56,7 @@ colordiff_config = dict(
     # lr=6e-4,
     lr = 1e-5,
     batch_size=5,
-    img_size = 128,
+    img_size = 64,
     sample=True,
     should_log=True,
     epochs=5,
@@ -78,13 +78,13 @@ if __name__ == "__main__":
     train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=18000)
     log = True
     # exit()
-    autoenc = GreyscaleAutoEnc.load_from_checkpoint("autoencpretrain/2gyi15mo/checkpoints/epoch=4-step=1600.ckpt",  
-                                            encoder_config=encoder_conf,
-                                            val_dl=val_dl,
-                                            display_every=50,
-                                            should_log=False)
-    # autoenc = GreyscaleAutoEnc(encoder_config=encoder_conf, val_dl=val_dl, display_every=50, should_log=False)
-    unet = UNetModel(**small_unet)
+    # autoenc = GreyscaleAutoEnc.load_from_checkpoint("autoencpretrain/2gyi15mo/checkpoints/epoch=4-step=1600.ckpt",  
+    #                                         encoder_config=encoder_conf,
+    #                                         val_dl=val_dl,
+    #                                         display_every=50,
+    #                                         should_log=False)
+    # # autoenc = GreyscaleAutoEnc(encoder_config=encoder_conf, val_dl=val_dl, display_every=50, should_log=False)
+    # unet = UNetModel(**small_unet)
     model = PLColorDiff(unet, train_dl, val_dl, autoenc, **colordiff_config)
     # model = PLColorDiff.load_from_checkpoint("/home/ec2-user/Color-diffusion/Color_diffusion_dec/azure0.ckpt", unet=unet, train_dl=train_dl, val_dl=val_dl, autoencoder=autoenc, **colordiff_config)
     log = True

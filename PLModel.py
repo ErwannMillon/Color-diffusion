@@ -128,13 +128,13 @@ class PLColorDiff(pl.LightningModule):
         self.log_dict(losses, on_step=True)
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
             self.test_step(x_0)
-        if batch_idx > 1 and self.autoenc_frozen is False:
-            print ("freezing autoencoder")
-            freeze_module(self.autoenc)
-            torch.save(self.autoenc.state_dict(), "./frozenae.pt")
-            del self.autoenc.decoder
-            self.autoenc_frozen = True
-            self.train_autoenc = False
+        # if batch_idx > 1 and self.autoenc_frozen is False:
+        #     print ("freezing autoencoder")
+        #     freeze_module(self.autoenc)
+        #     torch.save(self.autoenc.state_dict(), "./frozenae.pt")
+        #     del self.autoenc.decoder
+        #     self.autoenc_frozen = True
+        #     self.train_autoenc = False
         return losses["total loss"]
     # def on_train_epoch_end(self) -> None:
     #     return 
