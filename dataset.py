@@ -1,4 +1,5 @@
 import glob
+import random
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2lab, lab2rgb
@@ -89,11 +90,13 @@ import csv
 
 def make_dataloaders_celeba(path, config, num_workers=0, shuffle=True, limit=None):
     img_paths = glob.glob(path + "/*")
+    if limit: 
+        img_paths = random.sample(img_paths, limit)
     n_imgs = len(img_paths)
     train_split = img_paths[:int(n_imgs * .9)]
     val_split = img_paths[int(n_imgs * .9):]
-    train_dataset = ColorizationDataset(train_split, split="train", config=config, size=config["img_size"], limit=limit)
-    val_dataset = ColorizationDataset(val_split, split="val", config=config, size=config["img_size"], limit=limit//10)
+    train_dataset = ColorizationDataset(train_split, split="train", config=config, size=config["img_size"], limit=None)
+    val_dataset = ColorizationDataset(val_split, split="val", config=config, size=config["img_size"], limit=None)
     print(f"train size: {len(train_split)}")
     train_dl = DataLoader(train_dataset, batch_size=config["batch_size"], 
                             num_workers=num_workers, pin_memory=config["pin_memory"], persistent_workers=True, shuffle=shuffle)

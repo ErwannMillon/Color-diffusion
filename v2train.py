@@ -1,7 +1,7 @@
 import wandb
 import torch
 import pytorch_lightning as pl
-from dataset import make_dataloaders, make_dataloaders_celeba
+from dataset import ColorizationDataset, make_dataloaders, make_dataloaders_celeba
 from PLModel import PLColorDiff
 from model import ColorDiffusion
 from unet import SimpleUnet
@@ -37,16 +37,16 @@ colordiff_config = dict(
     pin_memory = True,
     T=350,
     # lr=6e-4,
-    lr = 5e-7,
+    lr = 1e-6,
     loss_fn = "l2",
-    batch_size=10,
-    accumulate_grad_batches=7,
-    img_size = 128,
+    batch_size=36,
+    accumulate_grad_batches=2,
+    img_size = 64,
     sample=True,
     should_log=True,
     epochs=14,
     using_cond=True,
-    display_every=200,
+    display_every=2,
     dynamic_threshold=False,
     train_autoenc=False,
     enc_loss_coeff = 1.1,
@@ -56,6 +56,8 @@ if __name__ == "__main__":
     colordiff_config["device"] = "gpu" 
     train_dl, val_dl = make_dataloaders_celeba("./img_align_celeba", colordiff_config, num_workers=2, limit=35000)
     log = True
+    colordiff_config["sample"] = log
+    colordiff_config["should_log"] = log
 
     unet_config = dict(
         channels=3,
@@ -82,16 +84,20 @@ if __name__ == "__main__":
     unet = Unet(
         **unet_config,
     ) 
-    ckpt = "Color_diffusion_v2/14770d8r/checkpoints/last.ckpt"
+    debug_inference = True
+    if debug_inference:
+        from torch.utils.data import DataLoader
+        image = "./bwface.jpg"
+        dataset = ColorizationDataset([image], split="val", config=colordiff_config, size=64)
+        val_dl = DataLoader(dataset, batch_size=colordiff_config["batch_size"], 
+                                num_workers=2, pin_memory=colordiff_config["pin_memory"], persistent_workers=True, shuffle=False)
+    ckpt = "/home/ec2-user/Color-diffusion/Color_diffusion_v2/23l96nt1/checkpoints/last.ckpt"
     if ckpt is not None:
-        model = ColorDiffusion.load_from_checkpoint(ckpt, strict=False, unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
+        model = ColorDiffusion.load_from_checkpoint(ckpt, strict=True, unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
     else:
         model = ColorDiffusion(unet=unet, encoder=encoder, train_dl=train_dl, val_dl=val_dl, **colordiff_config)
     # model = ColorDiffusion.load_from_checkpoint("Color_diffusion_v2/3cma4wob/checkpoints/last.ckpt", unet=unet, encoder=encoder, train_dl=train_dl, val_dl=train_dl, **colordiff_config)
     # model = torch.compile(model)
-    log = True
-    colordiff_config["sample"] = log
-    colordiff_config["should_log"] = log
     ic.disable()
     if log:
         wandb_logger = WandbLogger(project="Color_diffusion_v2")
@@ -109,7 +115,9 @@ if __name__ == "__main__":
     # update_after_step = 100,    # only after this number of .update() calls will it start updating
     # update_every = 10,          # how often to actually update, to save on compute (updates every 10th .update() call)
     # )
+    #inference testing
 
+    
     trainer = pl.Trainer(max_epochs=colordiff_config["epochs"],
                         logger=wandb_logger if log is True else None, 
                         accelerator=colordiff_config["device"],

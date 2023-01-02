@@ -47,6 +47,7 @@ class ColorDiffusion(pl.LightningModule):
                 img_size = 64,
                 sample=True,
                 should_log=True,
+                upscaler=None,
                 using_cond=False,
                 display_every=None,
                 dynamic_threshold=False,
@@ -121,31 +122,32 @@ class ColorDiffusion(pl.LightningModule):
     def test_step(self, batch, *args, **kwargs):
         x = next(iter(self.val_dl)).to(batch)
         self.sample_plot_image(x)
-        self.sample_plot_image(x, ema=self.ema)
+        self.sample_plot_image(x, use_ema=True)
     def configure_optimizers(self):
         learnable_params = list(self.unet.parameters()) + list(self.encoder.parameters())
         global_optim = torch.optim.AdamW(learnable_params, lr=self.lr, weight_decay=28e-3)
         return global_optim
-    def log_img(self, image, caption="diff samples", ema=None):
+    def log_img(self, image, caption="diff samples", use_ema=False):
         rgb_imgs = lab_to_rgb(*split_lab(image))
         # ic("logging image")
         # images = wandb.Image(rgb_imgs, caption=caption)
-        if ema is not None:
+        if use_ema:
             self.logger.log_image("EMA samples", [rgb_imgs])
         else:
             self.logger.log_image("samples", [rgb_imgs])
     def on_before_zero_grad(self, *args, **kwargs):
         self.ema.update()
     @torch.inference_mode()
-    def sample_loop(self, x_l, prog=False, ema=None):
+    def sample_loop(self, x_l, prog=False, use_ema=False):
         """
         Noises the image to timestep T (color channels are random)
         Then autoregressively denoises the color channels to t=0 to get the colorized image
         Returns an array containing the noised image, intermediate images in the denoising process, and the final image
         """
+        ema = self.ema if use_ema else None
         images = []
         img_size = x_l.shape[-1]
-        num_images = 12
+        num_images = 13
         stepsize = self.T // num_images
         #Initialize image with random noise in color channels
         x_ab = torch.randn((x_l.shape[0], 2, img_size, img_size)).to(x_l)
@@ -160,7 +162,7 @@ class ColorDiffusion(pl.LightningModule):
                 images += img.unsqueeze(0)
         return images
     @torch.inference_mode()
-    def sample_plot_image(self, x_0, show=True, prog=False, ema=None):
+    def sample_plot_image(self, x_0, show=True, prog=False, use_ema=False, log=True):
         """
         Denoises a single image and displays a grid showing the ground truth, intermediate outputs in the denoising process, and the final denoised image
         """
@@ -175,12 +177,13 @@ class ColorDiffusion(pl.LightningModule):
         ground_truth_images += greyscale.unsqueeze(0) #add greyscale version of ground truth (model input before noising) to image grid
         if len(x_l.shape) == 3:
             x_l = x_l.unsqueeze(0)
-        images = ground_truth_images + self.sample_loop(x_l, prog=prog, ema=ema)
+        images = ground_truth_images + self.sample_loop(x_l, prog=prog, use_ema=use_ema)
         grid = torchvision.utils.make_grid(torch.cat(images), dim=0).to(x_l)
         if show:
             show_lab_image(grid.unsqueeze(0), log=self.should_log)
             _ = lab_to_rgb(*split_lab(images[-1])) #debugging (this warns about pixels that are outside of valid LAB color range only for the final output image)
             plt.show()     
-        if self.should_log:
-            self.log_img(grid.unsqueeze(0), ema=ema)
-        return images[-1]
+        if self.should_log and log:
+            self.log_img(grid.unsqueeze(0), use_ema=use_ema)
+        # return images[-1]
+        return lab_to_rgb(*split_lab(images[-1]))
