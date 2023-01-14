@@ -1,15 +1,11 @@
 from argparse import ArgumentParser
-import wandb
-import torch
 import pytorch_lightning as pl
-from dataset import ColorizationDataset, make_dataloaders, make_dataloaders
+from dataset import ColorizationDataset, make_dataloaders
 from model import ColorDiffusion
-from utils import get_device
+from utils import get_device, load_default_configs
 from pytorch_lightning.loggers import WandbLogger
-from icecream import ic
 from unet import Unet, Encoder
 from pytorch_lightning.callbacks import ModelCheckpoint
-from default_configs import colordiff_config, unet_config, enc_config
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -20,12 +16,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
+    enc_config, unet_config, colordiff_config = load_default_configs()
     train_dl, val_dl = make_dataloaders(args.dataset, colordiff_config, num_workers=2, limit=35000)
     colordiff_config["sample"] = args.log
     colordiff_config["should_log"] = args.log
 
     #TODO remove 
     args.ckpt = "/home/ec2-user/Color-diffusion/Color_diffusion_v2/23l96nt1/checkpoints/last.ckpt"
+
     
     encoder = Encoder(**enc_config)
     unet = Unet(**unet_config)

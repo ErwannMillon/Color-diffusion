@@ -1,0 +1,10 @@
+channels: 1
+dropout: 0.3
+self_condition: false
+out_dim: 2
+dim: 128
+dim_mults:
+- 1
+- 2
+- 3
+- 3

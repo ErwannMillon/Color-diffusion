@@ -1,12 +1,10 @@
-import time
-from icecream import ic
+from omegaconf import OmegaConf
+from glob import glob
 
 import numpy as np
-from skimage.color import rgb2lab, lab2rgb
+from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
 from torch import nn
-import wandb
-import torch.nn.functional as F
 import torch
 
 def freeze_module(module):
@@ -21,13 +19,6 @@ def get_device():
         device = "cpu"
     device = "cuda" if torch.cuda.is_available() else "cpu"
     return (device)
-
-def split_lab(image):
-    assert isinstance(image, torch.Tensor)
-    if isinstance(image, torch.Tensor):
-        l = image[:, :1,]
-        ab = image[:, 1:,]	
-    return (l, ab)
 
 def custom_to_pil(x, process=True):
   x = x.detach().cpu()
@@ -125,3 +116,7 @@ def l_to_rgb(L):
     L = (L + 1.) * 50.
     print(L.min(), L.max())
     return L.repeat(3, dim=1)
+
+def load_default_configs():
+    config_path = "./configs/default/*.yaml"
+    return [OmegaConf.load(path) for path in glob(config_path)]

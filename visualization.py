@@ -1,5 +1,11 @@
+from dataset import make_dataloaders
+import torch
+from utils import lab_to_rgb, split_lab
+from PIL import Image
+from diffusion import GaussianDiffusion
 import imageio
 import glob
+from omegaconf import OmegaConf
 import os
 
 def clear_img_dir(img_dir):
@@ -18,7 +24,7 @@ def create_gif(total_duration, extend_frames, folder="./img_history", gif_name="
     durations = [frame_duration] * len(paths)
     if extend_frames:
         durations [0] = 1.5
-        durations [-1] = 3
+        durations [-1] = 1.5
     for file_name in os.listdir(folder):
         if file_name.endswith('.png'):
             file_path = os.path.join(folder, file_name)
@@ -27,5 +33,15 @@ def create_gif(total_duration, extend_frames, folder="./img_history", gif_name="
     return gif_name
 
 if __name__ == "__main__":
-    train_dl, val_dl = make_dataloaders("data/celeba", config)
-    create_gif()
+    colordiff_config = OmegaConf.load("configs/default/colordiff_config.yaml")
+    colordiff_config["batch_size"] = 1
+    _, val_dl = make_dataloaders("./img_align_celeba", colordiff_config)
+    batch = next(iter(val_dl))
+    diffusion = GaussianDiffusion(300)
+    
+    for i in range(300):
+        img, _ = diffusion.forward_diff(batch, torch.tensor([i]))
+        pil_img = Image.fromarray(lab_to_rgb(*split_lab(img)))
+        pil_img.save(f"./visualization/forward_diff/{i:04d}.png")
+
+    # create_gif()

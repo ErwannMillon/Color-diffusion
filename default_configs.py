@@ -1,3 +1,4 @@
+from omegaconf import OmegaConf
 colordiff_config = dict(
     device = "gpu",
     pin_memory = True,
@@ -39,3 +40,9 @@ enc_config = dict(
     dim=128,
     dim_mults=[1, 2, 3, 3],
 )
+conf = OmegaConf.create(unet_config)
+print(OmegaConf.to_yaml(conf))
+def load_config(config_path):
+    conf = OmegaConf.load(config_path)
+    return conf
+# def loadprint(load_config('./configs/encoder_config.yaml'))

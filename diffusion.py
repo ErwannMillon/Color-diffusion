@@ -21,7 +21,7 @@ def get_index_from_list(vals, t, x_shape):
     return out.reshape(batch_size, *((1,) * (len(x_shape) - 1)))
 
 class GaussianDiffusion(LightningModule):
-    def __init__(self, T, dynamic_threshold=True) -> None:
+    def __init__(self, T, dynamic_threshold=False) -> None:
         super().__init__()
         self.betas = linear_beta_schedule(timesteps=T).to(self.device)
         self.alphas = 1. - self.betas

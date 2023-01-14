@@ -1,0 +1,16 @@
+device: gpu
+pin_memory: true
+T: 350
+lr: 1.0e-06
+loss_fn: l2
+batch_size: 36
+accumulate_grad_batches: 2
+img_size: 64
+sample: true
+should_log: true
+epochs: 14
+using_cond: true
+display_every: 2
+dynamic_threshold: false
+train_autoenc: false
+enc_loss_coeff: 1.1

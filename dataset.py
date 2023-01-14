@@ -4,12 +4,9 @@ import numpy as np
 from PIL import Image
 from skimage.color import rgb2lab
 import torch
-from torch import nn, optim
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
-from PIL import Image,ImageChops
-
-from PIL import Image, ImageStat
+from PIL import Image, ImageChops
 
 def is_greyscale(im):
     """
