@@ -480,7 +480,6 @@ class Encoder(nn.Module):
     def forward(self, x):
         intermediates = []
         x = self.init_conv(x)
-        r = x.clone()
 
         # t = self.time_mlp(time)
         t = None

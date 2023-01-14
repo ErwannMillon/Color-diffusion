@@ -47,7 +47,6 @@ if __name__ == "__main__":
                                val_dl=val_dl, 
                                **colordiff_config)
     if args.log:
-        from pytorch_lightning.profiler import AdvancedProfiler
         wandb_logger = WandbLogger(project="Color_diffusion_v2")
         wandb_logger.watch(unet)
         wandb_logger.experiment.config.update(colordiff_config)

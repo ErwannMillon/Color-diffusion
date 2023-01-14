@@ -3,14 +3,8 @@ import gradio as gr
 from dataset import ColorizationDataset
 from utils import lab_to_rgb, split_lab
 from icecream import ic
-import wandb
 import torch
-import pytorch_lightning as pl
-from dataset import make_dataloaders, make_dataloaders
 from model import ColorDiffusion
-from unet import SimpleUnet
-from pytorch_lightning.loggers import WandbLogger
-from icecream import ic
 from super_image import MdsrModel, ImageLoader
 from default_configs import unet_config, enc_config, colordiff_config
 from unet import Unet, Encoder
@@ -31,7 +25,6 @@ def get_image(model, super_res, image):
         inputs = ImageLoader.load_image(PIL_image)
         upscaled = super_res(inputs)
         upscaled_pil = Image.fromarray(upscaled[0].detach().numpy().transpose(1, 2, 0).astype(np.uint8))
-    # print(upscaled_pil.shape)
     return(rgb_img[0], upscaled_pil)
 
 encoder = Encoder(**enc_config)
