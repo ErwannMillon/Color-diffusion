@@ -21,7 +21,7 @@ from PIL import Image
 from tqdm.auto import tqdm
 
 from accelerate import Accelerator
-from utils import split_lab, show_lab_image, lab_to_rgb, custom_to_pil
+from utils import split_lab_channels, show_lab_image, lab_to_rgb, custom_to_pil
 # constants
 
 ModelPrediction =  namedtuple('ModelPrediction', ['pred_noise', 'pred_x_start'])

@@ -1,6 +1,10 @@
 test*
-visualization
+visualization/forward_diff
+visualization/denoising
 *code-workspace*
+checkpoints
+.trunk
+wandb
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

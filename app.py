@@ -1,7 +1,7 @@
 import functools
 import gradio as gr
 from dataset import ColorizationDataset
-from utils import lab_to_rgb, split_lab
+from utils import lab_to_rgb, split_lab_channels
 from icecream import ic
 import torch
 from model import ColorDiffusion
@@ -10,6 +10,7 @@ from default_configs import unet_config, enc_config, colordiff_config
 from denoising import Unet, Encoder
 from PIL import Image
 import numpy as np
+
 
 def get_image(model, super_res, image):
     print(image)
@@ -20,13 +21,13 @@ def get_image(model, super_res, image):
     model.eval()
     with torch.inference_mode():
         img = model.sample_plot_image(batch, show=False, prog=True, use_ema=False, log=False)
-        rgb_img = lab_to_rgb(*split_lab(torch.tensor(img)))
-        PIL_image = Image.fromarray(np.uint8(rgb_img[0] * 255)).convert('RGB')
+        rgb_img = lab_to_rgb(*split_lab_channels(torch.tensor(img)))
+        # PIL_image = Image.fromarray(np.uint8(rgb_img[0] * 255)).convert('RGB')
         # inputs = ImageLoader.load_image(PIL_image)
         # upscaled = super_res(inputs)
         # upscaled_pil = Image.fromarray(upscaled[0].detach().numpy().transpose(1, 2, 0).astype(np.uint8))
-        upscaled_pil = rgb_img[0]
     # return(rgb_img[0], upscaled_pil)
+    return (rgb_img[0], rgb_img[0])
 
 encoder = Encoder(**enc_config)
 unet = Unet(**unet_config,) 

@@ -4,7 +4,7 @@ from torch import optim
 from utils import init_weights, lab_to_pil
 import torch.nn.functional as F
 from dynamic_threshold import dynamic_threshold
-from utils import cat_lab, split_lab
+from utils import cat_lab, split_lab_channels
 from pytorch_lightning import LightningModule
 
 def linear_beta_schedule(timesteps, start=0.0001, end=0.02):
@@ -36,7 +36,7 @@ class GaussianDiffusion(LightningModule):
         """ 
         Takes an image and a timestep as input and noises the color channels to timestep t
         """
-        l, ab = split_lab(x_0)
+        l, ab = split_lab_channels(x_0)
         noise = torch.randn_like(ab)
         sqrt_alphas_cumprod_t = get_index_from_list(self.sqrt_alphas_cumprod, t, ab.shape).to(x_0)
         # print(f"sqrt_alphas_cumprod_t = {sqrt_alphas_cumprod_t}")
@@ -56,7 +56,7 @@ class GaussianDiffusion(LightningModule):
 
     @torch.no_grad()
     def sample_timestep(self, model, encoder, x, t, cond=None, T=300, ema=None):
-        x_l, x_ab = split_lab(x)
+        x_l, x_ab = split_lab_channels(x)
         #gets the mean- and variance-derived variables for timestep t 
         betas_t = get_index_from_list(self.betas.to(x), t, x.shape)
         sqrt_one_minus_alphas_cumprod_t = get_index_from_list(

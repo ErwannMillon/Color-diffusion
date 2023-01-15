@@ -4,7 +4,7 @@ import torchvision
 from dataset import ColorizationDataset, make_dataloaders
 from torch.utils.data import DataLoader
 from denoising import Unet, Encoder
-from utils import get_device, lab_to_rgb, split_lab
+from utils import get_device, lab_to_rgb, split_lab_channels
 from default_configs import colordiff_config, unet_config, enc_config
 from model import ColorDiffusion
 from argparse import ArgumentParser
@@ -12,7 +12,7 @@ from argparse import ArgumentParser
 from dataset import make_dataloaders
 from matplotlib import pyplot as plt
 import torch
-from utils import lab_to_rgb, split_lab
+from utils import lab_to_rgb, split_lab_channels
 from PIL import Image
 from diffusion import GaussianDiffusion
 import imageio
@@ -20,6 +20,7 @@ import glob
 import numpy as np
 from omegaconf import OmegaConf
 import os
+
 
 def clear_img_dir(img_dir):
     if not os.path.exists("img_history"):
@@ -29,6 +30,7 @@ def clear_img_dir(img_dir):
     for filename in glob.glob(img_dir+"/*"):
         os.remove(filename)
 
+
 def create_gif(folder, total_duration, extend_frames=True, gif_name="face_edit.gif"):
     images = []
     paths = list(sorted(glob.glob(folder + "/*")))
@@ -37,12 +39,13 @@ def create_gif(folder, total_duration, extend_frames=True, gif_name="face_edit.g
     print(len(paths), "frame dur", frame_duration)
     durations = [frame_duration] * len(paths)
     if extend_frames:
-        durations [0] = 1.5
-        durations [-1] = 1.5
+        durations[0] = 1.5
+        durations[-1] = 1.5
     for file_path in paths:
         images.append(imageio.imread(file_path))
     imageio.mimsave(gif_name, images, duration=durations)
     return gif_name
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -77,7 +80,7 @@ if __name__ == "__main__":
     for i in range(300):
         t = torch.tensor([i]).float()
         img, _ = diffusion.forward_diff(batch.cuda(), t=t)
-        rgb_img = lab_to_rgb(*split_lab(img))
+        rgb_img = lab_to_rgb(*split_lab_channels(img))
         pil_img = Image.fromarray(np.uint8(rgb_img[0] * 255))
         pil_img.save(f"./visualization/forward_diff/{i:04d}.png")
         # if i % 10 == 0:
