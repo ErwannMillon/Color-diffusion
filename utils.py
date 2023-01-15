@@ -4,8 +4,18 @@ from glob import glob
 import numpy as np
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
+from PIL import Image
 from torch import nn
 import torch
+
+def lab_to_pil(img):
+    if len(img.shape) == 3:
+        img = img.unsqueeze(0)
+    rgb_img = lab_to_rgb(*split_lab(img))
+    pil_img = Image.fromarray(np.uint8(rgb_img[0] * 255))
+    return pil_img
+    
+    
 
 def freeze_module(module):
     for param in module.parameters():

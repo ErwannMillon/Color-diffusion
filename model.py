@@ -3,7 +3,7 @@ from PIL import Image
 from tqdm import tqdm
 from diffusion import GaussianDiffusion
 from dynamic_threshold import dynamic_threshold
-from utils import cat_lab, freeze_module, lab_to_rgb, show_lab_image, split_lab, init_weights
+from utils import cat_lab, freeze_module, lab_to_pil, lab_to_rgb, show_lab_image, split_lab, init_weights
 import torch.nn.functional as F
 import torchvision
 import wandb
@@ -66,6 +66,7 @@ class ColorDiffusion(pl.LightningModule):
         - The real noise applied to the color channels by the forward diffusion process
         """
         t = torch.randint(0, self.T, (x_0.shape[0],)).to(x_0)
+        print(t.shape, t.dtype)
         x_noised, noise = self.diffusion.forward_diff(x_0, t, T=self.T)
         return (self(x_noised, t, x_l), noise)
     def get_losses(self, noise_pred, noise, x_l):
@@ -106,7 +107,7 @@ class ColorDiffusion(pl.LightningModule):
     def on_before_zero_grad(self, *args, **kwargs):
         self.ema.update()
     @torch.inference_mode()
-    def sample_loop(self, x_l, prog=False, use_ema=False, save_all=False):
+    def sample_loop(self, x_l, prog=False, use_ema=False, save_all=True):
         """
         Noises color channels to timestep T, then denoises the color channels to t=0 to get the colorized image
         Returns an array containing the noised image, intermediate images in the denoising process, and the final image
@@ -126,14 +127,15 @@ class ColorDiffusion(pl.LightningModule):
             counter = tqdm(counter)
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
-            print(t)
+        
             img = self.diffusion.sample_timestep(self.unet, self.encoder, img, t, T=self.T, cond=x_l, ema=ema)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
             #TODO Debug
-            if save_all:
-                pil_img = Image.fromarray(lab_to_rgb(*split_lab(img)))
-                pil_img.save(f"./tmp/frame{i}.png")
+            if save_all and i % 2 == 0:
+                # pil_img = Image.fromarray(lab_to_rgb(*split_lab(img)))
+                pil_img = lab_to_pil(img)
+                pil_img.save(f"./visualization/denoising/{i:04d}.png")
         return images
 
     @torch.inference_mode()
@@ -162,6 +164,6 @@ class ColorDiffusion(pl.LightningModule):
             self.log_img(grid.unsqueeze(0), use_ema=use_ema)
 
         im =  lab_to_rgb(*split_lab(images[-1]))
-        pil = Image.fromarray(im)
-        pil.save(f"./visualization/forward_diff/adf.png")
+        # pil = Image.fromarray(im)
+        # pil.save(f"./visualization/forward_diff/adf.png")
         return lab_to_rgb(*split_lab(images[-1]))

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch import optim
-from utils import init_weights
+from utils import init_weights, lab_to_pil
 import torch.nn.functional as F
 from dynamic_threshold import dynamic_threshold
 from utils import cat_lab, split_lab
@@ -39,14 +39,19 @@ class GaussianDiffusion(LightningModule):
         l, ab = split_lab(x_0)
         noise = torch.randn_like(ab)
         sqrt_alphas_cumprod_t = get_index_from_list(self.sqrt_alphas_cumprod, t, ab.shape).to(x_0)
+        # print(f"sqrt_alphas_cumprod_t = {sqrt_alphas_cumprod_t}")
         sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
             self.sqrt_one_minus_alphas_cumprod, t, ab.shape
         ).to(x_0)
+        # print(f"sqrt_one_minus_alphas_cumprod_t = {sqrt_one_minus_alphas_cumprod_t}")
         # mean + variance
         ab_noised = sqrt_alphas_cumprod_t * ab \
         + sqrt_one_minus_alphas_cumprod_t * noise
 
         noised_img = torch.cat((l, ab_noised), dim=1)
+        # lab_to_pil(noised_img).save("noised_img.png")
+        # print(f"noise = {noise}")
+
         return(noised_img, noise)
 
     @torch.no_grad()
@@ -81,3 +86,5 @@ class GaussianDiffusion(LightningModule):
             if self.dynamic_threshold:
                 ab_t_pred = dynamic_threshold(ab_t_pred)
             return cat_lab(x_l, ab_t_pred)
+if __name__ == "__main__":
+    d = GaussianDiffusion(T=300)

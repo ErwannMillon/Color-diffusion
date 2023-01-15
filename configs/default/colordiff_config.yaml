@@ -3,7 +3,7 @@ pin_memory: true
 T: 350
 lr: 1.0e-06
 loss_fn: l2
-batch_size: 36
+batch_size: 1
 accumulate_grad_batches: 2
 img_size: 64
 sample: true

@@ -4,7 +4,7 @@
 This project is a simple example of how we can use diffusion models to colorize black and white images. 
 
 This implementation uses the LAB color space, a 3 channel alternative to the RGB color space. 
-The "L" (Lightness) channel in this space is a greyscale image: it contains the luminous intensity of each pixel. The two other channels are used to represent the color of each pixel. 
+The "L" (Lightness) channel in this space is equivalent to a greyscale image: it represents the luminous intensity of each pixel. The two other channels are used to represent the color of each pixel. 
 
 To train the model, we first load color images and convert them to LAB.
 Then, we add noise only to the color channels, keeping the L channel constant. The model gets this channel "for free" because it doesn't need to learn how to predict the greyscale image: it is always known at train and test time. 

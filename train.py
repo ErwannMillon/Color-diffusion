@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     enc_config, unet_config, colordiff_config = load_default_configs()
     train_dl, val_dl = make_dataloaders(args.dataset, colordiff_config, num_workers=2, limit=35000)
-    colordiff_config["sample"] = True
+    colordiff_config["sample"] = False
     colordiff_config["should_log"] = args.log
 
     #TODO remove 
