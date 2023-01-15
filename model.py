@@ -10,7 +10,7 @@ import wandb
 import pytorch_lightning as pl
 from matplotlib import pyplot as plt
 from copy import deepcopy
-# from torch_ema import ExponentialMovingAverage
+from torch_ema import ExponentialMovingAverage
 
 class ColorDiffusion(pl.LightningModule):
     def __init__(self,
@@ -83,7 +83,6 @@ class ColorDiffusion(pl.LightningModule):
         x_l, _ = split_lab(batch)
         noise_pred, noise = self.get_batch_pred(batch, x_l)
         losses = self.get_losses(noise_pred, noise, x_l)
-        # val_loss = self.training_step(batch, batch_idx)
         if self.should_log:
             self.log("val_loss", losses["total loss"])
         if self.sample and batch_idx and batch_idx % self.display_every == 0:
@@ -127,6 +126,7 @@ class ColorDiffusion(pl.LightningModule):
             counter = tqdm(counter)
         for i in counter:
             t = torch.full((1,), i, dtype=torch.long).to(img)
+            print(t)
             img = self.diffusion.sample_timestep(self.unet, self.encoder, img, t, T=self.T, cond=x_l, ema=ema)
             if i % stepsize == 0:
                 images += img.unsqueeze(0)
@@ -141,6 +141,7 @@ class ColorDiffusion(pl.LightningModule):
         """
         Denoises a single image and displays a grid showing the ground truth, intermediate outputs in the denoising process, and the final denoised image
         """
+        print("Sampling image")
         ground_truth_images = []
         if x_0.shape[1] == 3: #if the image has color channels
             x_l, _ = split_lab(x_0)
@@ -159,4 +160,8 @@ class ColorDiffusion(pl.LightningModule):
             plt.show()     
         if self.should_log and log:
             self.log_img(grid.unsqueeze(0), use_ema=use_ema)
+
+        im =  lab_to_rgb(*split_lab(images[-1]))
+        pil = Image.fromarray(im)
+        pil.save(f"./visualization/forward_diff/adf.png")
         return lab_to_rgb(*split_lab(images[-1]))

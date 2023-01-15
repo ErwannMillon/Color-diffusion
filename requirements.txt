@@ -1,3 +1,7 @@
+denoising-diffusion-pytorch
+accelerate
+gdown
+omegaconf
 einops
 torch-ema
 wandb

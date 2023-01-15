@@ -7,7 +7,7 @@ import torch
 from model import ColorDiffusion
 from super_image import MdsrModel, ImageLoader
 from default_configs import unet_config, enc_config, colordiff_config
-from unet import Unet, Encoder
+from denoising import Unet, Encoder
 from PIL import Image
 import numpy as np
 

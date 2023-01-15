@@ -3,7 +3,7 @@ import torch
 import torchvision
 from dataset import ColorizationDataset
 from torch.utils.data import DataLoader
-from unet import Unet, Encoder
+from denoising import Unet, Encoder
 from utils import get_device, lab_to_rgb, split_lab
 from default_configs import colordiff_config, unet_config, enc_config
 from model import ColorDiffusion
