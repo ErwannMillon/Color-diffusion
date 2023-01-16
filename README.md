@@ -23,7 +23,8 @@ Then, we add noise only to the color channels, keeping the L channel constant. T
 <figcaption align = "center"><b>Forward Diffusion Process</b></figcaption>
 </figure>
 <br></br>
-*Note that we actually don't need to go through all of the steps of the diffusion process to get to timestep t. Our sampler is non-Markovian because we have a fixed variance schedule, but the entire diffusion process is shown for illustrative purposes*
+
+*Note that we actually don't need to go through all of the steps of the diffusion process to get to timestep t. Our forward diffusion process is non-Markovian, but the entire diffusion process is shown for illustrative purposes*
 
 The model is a UNet that takes a 3 channel LAB input (the ground-truth greyscale channel concatenated with noised AB channels) and outputs a 2 channel prediction of the color noise. 
 <br></br>
