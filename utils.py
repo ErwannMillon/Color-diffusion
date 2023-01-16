@@ -88,6 +88,8 @@ def right_pad_dims_to(x: torch.tensor, t: torch.tensor) -> torch.tensor:
 
 def split_lab_channels(image):
     assert isinstance(image, torch.Tensor)
+    if len(image.shape) == 3:
+        image = image.unsqueeze(0)
     return torch.split(image, [1, 2], dim=1)
 
 

@@ -8,7 +8,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image, ImageChops
 
-from utils import load_default_configs
+from utils import load_default_configs, split_lab_channels
 
 
 def is_greyscale(im):
@@ -72,6 +72,11 @@ class ColorizationDataset(Dataset):
         img = np.array(img)
         return (img)
 
+    def get_lab_grayscale(self, idx=0):
+        img = self.get_lab_from_path(self.paths[idx])
+        l, _ = split_lab_channels(img.unsqueeze(0))
+        return torch.cat((l, *[torch.zeros_like(l)] * 2), dim=1)
+
     def __getitem__(self, idx):
         return self.get_lab_from_path(self.paths[idx])
 
@@ -83,8 +88,7 @@ class PickleColorizationDataset(ColorizationDataset):
     def __getitem__(self, idx):
         return (torch.load(self.paths[idx]))
 
-
-def make_dataloaders(path, config, num_workers=2, shuffle=True, limit=None):
+def make_datasets(path, config, limit=None):
     img_paths = glob.glob(path + "/*")
     if limit:
         img_paths = random.sample(img_paths, limit)
@@ -95,7 +99,13 @@ def make_dataloaders(path, config, num_workers=2, shuffle=True, limit=None):
     train_dataset = ColorizationDataset(
         train_split, split="train", config=config)
     val_dataset = ColorizationDataset(val_split, split="val", config=config)
+    print(f"Train size: {len(train_split)}")
+    print(f"Val size: {len(val_split)}")
+    return train_dataset, val_dataset
 
+
+def make_dataloaders(path, config, num_workers=2, shuffle=True, limit=None):
+    train_dataset, val_dataset = make_datasets(path, config, limit=limit)
     train_dl = DataLoader(train_dataset,
                           batch_size=config["batch_size"],
                           num_workers=num_workers,
@@ -108,8 +118,6 @@ def make_dataloaders(path, config, num_workers=2, shuffle=True, limit=None):
                         pin_memory=config["pin_memory"],
                         persistent_workers=True,
                         shuffle=shuffle)
-    print(f"Train size: {len(train_split)}")
-    print(f"Val size: {len(val_split)}")
     return train_dl, val_dl
 
 

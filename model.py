@@ -34,7 +34,6 @@ class ColorDiffusion(pl.LightningModule):
         self.sample = sample
         self.should_log = should_log
         self.encoder = encoder
-        self.ema.to("cuda")
         self.display_every = display_every
         self.val_dl = val_dl
         self.train_dl = train_dl
@@ -45,6 +44,7 @@ class ColorDiffusion(pl.LightningModule):
 
         self.ema = ExponentialMovingAverage(self.unet.parameters(),
                                             decay=0.9999)
+        self.ema.to(self.device)
         self.diffusion = GaussianDiffusion(T,
                                            dynamic_threshold=dynamic_threshold)
         if sample is True and display_every is None:
