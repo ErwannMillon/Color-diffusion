@@ -10,7 +10,7 @@ sample: true
 should_log: true
 epochs: 14
 using_cond: true
-display_every: 2
+display_every: 350
 dynamic_threshold: false
 train_autoenc: false
 enc_loss_coeff: 1.1
