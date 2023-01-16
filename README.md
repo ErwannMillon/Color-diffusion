@@ -58,14 +58,15 @@ The UNet architecture was adapted from denoising-diffusion-pytorch
 https://github.com/lucidrains/denoising-diffusion-pytorch
 
 ## Usage
-Use inference.py for command line colorization. See help for more info on the configuration flags you can pass
+Run `bash download_dataset.sh` to download the CelebA dataset and extract it
+
+Use inference.py for command line colorization.
 `
 python inference.py --image-path <IMG_PATH> --checkpoint <CKPT_PATH> --output <OUTPUT_PATH>
 `
 
 Or run 
-`
-python app.py` for a simple gradio web UI
+`python app.py` for a simple gradio web UI
 
 
 
