@@ -90,16 +90,9 @@ if __name__ == "__main__":
     colordiff_config["T"] = args.T
     colordiff_config["img_size"] = args.img_size
     colordiff_config["should_log"] = False
-
-    dataset = ColorizationDataset([args.img_path],
-                                  split="val",
-                                  config=colordiff_config)
-    image = dataset[0].unsqueeze(0)
-    colordiff_config = OmegaConf.load("configs/default/colordiff_config.yaml")
     colordiff_config["batch_size"] = 1
     colordiff_config["img_size"] = 64
     _, val_dl = make_dataloaders("./img_align_celeba", colordiff_config)
-
     dataset, _ = make_datasets("./img_align_celeba", colordiff_config)
     batch = next(iter(val_dl))
 
@@ -112,7 +105,7 @@ if __name__ == "__main__":
     model.to(device)
     for i in range(10):
 
-        batch = dataset.get_lab_grayscale(idx=i*10)
+        batch = dataset.get_lab_grayscale(idx=i)
         visualize_forward(batch.to(device))
         visualize_backward(model)
         create_gif_full("./visualization/forward_diff", 5, gif_name=f"./visualization/total_{i}.gif")
