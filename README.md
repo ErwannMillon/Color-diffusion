@@ -1,10 +1,12 @@
 # Color Diffusion
+Using diffusion models to colorize black and white images.
 <div>
 <img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_1.gif" width="128" height="128"/>
 <img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_2.gif" width="128" height="128"/>
 <img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_3.gif" width="128" height="128"/>
 <img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_4.gif" width="128" height="128"/>
 <img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_8.gif" width="128" height="128"/>
+<img src="https://github.com/ErwannMillon/Color-diffusion/blob/main/visualization/inference/total_90.gif" width="128" height="128"/>
 </div>
 
 ## Overview
