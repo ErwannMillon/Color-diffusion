@@ -105,7 +105,7 @@ if __name__ == "__main__":
     model.to(device)
     for i in range(10):
 
-        batch = dataset.get_lab_grayscale(idx=i)
+        batch = dataset.get_lab_grayscale(idx=i+123)
         visualize_forward(batch.to(device))
         visualize_backward(model)
         create_gif_full("./visualization/forward_diff", 5, gif_name=f"./visualization/total_{i}.gif")
