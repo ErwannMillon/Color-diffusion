@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
     device = get_device()
     enc_config, unet_config, colordiff_config = load_default_configs()
+    print("loaded default model config")
     colordiff_config["T"] = args.T
     colordiff_config["img_size"] = args.img_size
 

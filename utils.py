@@ -121,5 +121,5 @@ def l_to_rgb(L):
 
 
 def load_default_configs():
-    config_path = "./configs/default/*.yaml"
-    return [OmegaConf.load(path) for path in glob(config_path)]
+    configs = ["./configs/default/encoder_config.yaml", "./configs/default/unet_config.yaml", "./configs/default/colordiff_config.yaml"]
+    return [OmegaConf.load(path) for path in configs]
